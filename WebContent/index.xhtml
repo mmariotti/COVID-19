@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="#{!empty request.remoteUser ? user.locale.language : request.locale.language}"
+	xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:cc="http://xmlns.jcp.org/jsf/composite" xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+	xmlns:fn="http://xmlns.jcp.org/jsp/jstl/functions" xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions" xmlns:o="http://omnifaces.org/ui"
+	xmlns:of="http://omnifaces.org/functions" xmlns:pt="http://xmlns.jcp.org/jsf/passthrough">
+
+<f:view locale="#{request.locale}" transient="true" contentType="text/html" encoding="UTF-8">
+	<h:head>
+		<meta http-equiv="X-UA-Compatible" content1="IE=Edge,chrome=1" />
+		<title>COVID-19</title>
+		<!-- <link rel="shortcut icon" type="image/x-icon" href="#{resource['favicon.ico']}" /> -->
+	</h:head>
+
+	<h:body>
+		<h:outputScript library="omnifaces" name="fixviewstate.js" target="head" />
+		<h:outputStylesheet name="app.css" />
+		<h:outputScript name="app.js" />
+
+		<p:layout fullPage="false" stateful="false" style="height:100%; padding:5px;">
+			<p:layoutUnit position="center">
+				<p:dataTable var="item" value="#{controller.latestData}" tableStyleClass="app-table-auto">
+					<p:columnGroup type="header">
+						<p:row>
+							<p:column headerText="#{bundle.regione}" styleClass="app-table-frozencol" />
+							<p:column headerText="&amp;nbsp;" styleClass="app-table-frozen" />
+
+							<p:column headerText="#{bundle.letalita}" styleClass="app-bb-left" />
+
+							<c:forEach var="property" items="#{controller.properties}">
+								<p:column headerText="#{bundle[property]}" colspan="3" styleClass="app-bb-left" />
+							</c:forEach>
+						</p:row>
+
+						<p:row>
+							<p:column headerText="&amp;nbsp;" styleClass="app-table-frozencol" />
+							<p:column headerText="&amp;nbsp;" styleClass="app-table-frozen" />
+
+							<p:column styleClass="app-bb-left" />
+
+							<c:forEach var="property" items="#{controller.properties}">
+								<p:column headerText="tot" styleClass="app-bb-left" />
+								<p:column headerText="inc" />
+								<p:column headerText="inc%" />
+							</c:forEach>
+						</p:row>
+					</p:columnGroup>
+
+					<p:columnGroup type="footer">
+						<p:row>
+							<p:column footerText="#{bundle.italia}" styleClass="app-table-frozencol" />
+							<p:column footerText="&amp;nbsp;" styleClass="app-table-frozen" />
+
+							<p:column styleClass="app-right app-bb-left">
+								<f:facet name="footer">
+									<h:outputLabel
+										value="#{controller.lastSummary.deceduti / (controller.lastSummary.deceduti + controller.lastSummary.guariti)}">
+										<f:convertNumber type="percent" />
+									</h:outputLabel>
+								</f:facet>
+							</p:column>
+
+							<c:forEach var="property" items="#{controller.properties}">
+								<c:set var="value" value="#{controller.lastSummary[property]}" />
+								<c:set var="delta" value="#{controller.lastSummary[property += 'Delta']}" />
+								<c:set var="percent" value="#{value == delta ? 0 : delta / (value - delta)}" />
+
+								<p:column styleClass="app-right app-bb-left">
+									<f:facet name="footer">
+										<h:outputLabel value="#{value}">
+											<f:convertNumber />
+										</h:outputLabel>
+									</f:facet>
+								</p:column>
+								<p:column styleClass="app-right">
+									<f:facet name="footer">
+										<h:outputLabel value="#{delta}">
+											<f:convertNumber pattern="+#,##0;-#,##0" />
+										</h:outputLabel>
+									</f:facet>
+								</p:column>
+								<p:column styleClass="app-right">
+									<f:facet name="footer">
+										<h:outputLabel value="#{percent}">
+											<f:convertNumber pattern="+#,##0%;-#,##0%" />
+										</h:outputLabel>
+									</f:facet>
+								</p:column>
+							</c:forEach>
+						</p:row>
+					</p:columnGroup>
+
+
+					<p:column styleClass="app-table-frozencol">
+						<h:outputLabel value="#{item.denominazione}" />
+					</p:column>
+					<p:column styleClass="app-table-frozen">&amp;nbsp;</p:column>
+
+					<p:column styleClass="app-right app-bb-left">
+						<h:outputLabel value="#{item.deceduti / (item.deceduti + item.guariti)}">
+							<f:convertNumber type="percent" />
+						</h:outputLabel>
+					</p:column>
+
+					<c:forEach var="property" items="#{controller.properties}">
+						<c:set var="value" value="#{item[property]}" />
+						<c:set var="delta" value="#{item[property += 'Delta']}" />
+						<c:set var="percent" value="#{value == delta ? 0 : delta / (value - delta)}" />
+
+						<p:column styleClass="app-right app-bb-left">
+							<h:outputLabel value="#{value}">
+								<f:convertNumber />
+							</h:outputLabel>
+						</p:column>
+						<p:column styleClass="app-right">
+							<h:outputLabel value="#{delta}">
+								<f:convertNumber pattern="+#,##0;-#,##0"/>
+							</h:outputLabel>
+						</p:column>
+						<p:column styleClass="app-right">
+							<h:outputLabel value="#{percent}">
+								<f:convertNumber pattern="+#,##0%;-#,##0%"  />
+							</h:outputLabel>
+						</p:column>
+					</c:forEach>
+				</p:dataTable>
+			</p:layoutUnit>
+
+			<p:layoutUnit position="north" size="50">
+				<div>#{bundle.lastUpdate}: #{controller.lastUpdate}</div>
+
+			</p:layoutUnit>
+		</p:layout>
+
+
+		<p:ajaxStatus widgetVar="ajaxStatus" onstart="showStatusDialog()" onerror="ajaxError(arguments[1])"
+			oncomplete="hideStatusDialog()" />
+
+		<p:dialog id="statusDialog" widgetVar="statusDialog" modal="true" showHeader="false" resizable="false"
+			closable="false" draggable="false" showEffect="fade" hideEffect="explode">
+			<h:outputText value="#{bundle.loading}" style="white-space: nowrap; font-size: 18px;" />
+		</p:dialog>
+
+		<p:growl id="messages" widgetVar="messages" globalOnly="false" autoUpdate="true" showDetail="true" showSummary="true"
+			escape="false" redisplay="true" sticky="false" life="10000" />
+	</h:body>
+</f:view>
+</html>

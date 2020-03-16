@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jboss-deployment-structure xmlns="urn:jboss:deployment-structure:1.2">
+    <deployment>
+        <dependencies>
+            <!-- <module name="com.google.guava" /> -->
+            <!-- <module name="org.bouncycastle" /> -->
+            <module name="org.dom4j" />
+            <!-- <module name="org.jsoup" /> -->
+            <module name="org.slf4j" />
+            <!-- <module name="org.yaml.snakeyaml" /> -->
+            <!-- <module name="org.wildfly.extension.undertow" services="export" export="true" /> -->
+        </dependencies>
+        
+        <!-- <exclusions>
+            <module name="org.javassist" />
+        </exclusions> -->
+    </deployment>
+</jboss-deployment-structure>

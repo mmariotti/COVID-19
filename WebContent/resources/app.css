@@ -1,0 +1,190 @@
+@charset "UTF-8";
+
+html, body {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    height: 100%;
+    font-size: 0.9em;
+}
+
+html {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    font-family: helvetica, 'Trebuchet MS', arial, sans-serif, "latolight" !important;
+}
+
+body {
+    overflow: auto;
+    overflow-y: scroll;
+}
+
+img {
+    border: 0;
+}
+
+a {
+    outline: none;
+}
+
+ul {
+    padding-left: 20px;
+}
+
+
+*, *:before, *:after {
+    -webkit-box-sizing: inherit;
+    -moz-box-sizing: inherit;
+    box-sizing: inherit;
+    font-family: inherit;
+}
+
+/* Chrome/Opera/Safari */
+::-webkit-input-placeholder { 
+    color: rgba(0,0,0,0.5);
+}
+
+/* Firefox 18- */
+:-moz-placeholder { 
+    color: rgba(0,0,0,0.5);
+}
+
+/* Firefox 19+ */
+::-moz-placeholder { 
+    color: rgba(0,0,0,0.5);
+}
+
+/* Internet Explorer 10-11 */
+:-ms-input-placeholder { 
+    color: rgba(0,0,0,0.5) !important;
+}
+
+/* Microsoft Edge */
+::-ms-input-placeholder { 
+    color: rgba(0,0,0,0.5);
+}
+
+/* Most modern browsers support this now. */
+::placeholder { 
+    color: rgba(0,0,0,0.5);
+}
+
+
+input[readonly], 
+.ui-inputfield[readonly], 
+*[readonly] .ui-inputfield {
+    background-color: #eee;
+}
+
+input[data-required='true'], 
+.ui-inputfield[data-required='true'], 
+*[data-required='true'] .ui-inputfield,
+.ql-container[data-required='true'] {
+    box-shadow: inset 0px 2px 2px #bf8f8f;
+}
+
+/* Chrome/Opera/Safari */
+input[data-required='true']::-webkit-input-placeholder, 
+.ui-inputfield[data-required='true']::-webkit-input-placeholder, 
+*[data-required='true'] .ui-inputfield::-webkit-input-placeholder { 
+    color: rgba(255,0,0,0.5);
+}
+
+/* Firefox 18- */
+input[data-required='true']:-moz-placeholder, 
+.ui-inputfield[data-required='true']:-moz-placeholder, 
+*[data-required='true'] .ui-inputfield:-moz-placeholder {
+    color: rgba(255,0,0,0.5);
+}
+
+/* Firefox 19+ */
+input[data-required='true']::-moz-placeholder, 
+.ui-inputfield[data-required='true']::-moz-placeholder, 
+*[data-required='true'] .ui-inputfield::-moz-placeholder {
+    color: rgba(255,0,0,0.5);
+}
+
+/* Internet Explorer 10-11 */
+input[data-required='true']:-ms-input-placeholder, 
+.ui-inputfield[data-required='true']:-ms-input-placeholder, 
+*[data-required='true'] .ui-inputfield:-ms-input-placeholder {
+    color: rgba(255,0,0,0.5) !important;
+}
+
+/* Microsoft Edge */
+input[data-required='true']::-ms-input-placeholder, 
+.ui-inputfield[data-required='true']::-ms-input-placeholder, 
+*[data-required='true'] .ui-inputfield::-ms-input-placeholder {
+    color: rgba(255,0,0,0.5);
+}
+
+/* Most modern browsers support this now. */
+input[data-required='true']::placeholder, 
+.ui-inputfield[data-required='true']::placeholder, 
+*[data-required='true'] .ui-inputfield::placeholder {
+    color: rgba(255,0,0,0.5);
+}
+
+
+
+
+.app-table-auto {
+    table-layout: auto !important;
+}
+
+.app-right {
+    text-align: right !important;
+}
+
+.app-bb-left {
+    border-left: 2px solid black !important;
+}
+
+.app-table-frozencol {
+	position: absolute !important;
+    width: 198px !important;
+    min-width: 198px !important; 
+    max-width: 198px !important;
+    box-sizing: border-box;
+}
+
+tbody > tr > td.app-table-frozencol {
+    background: inherit !important; 
+    border-right: 0 !important;
+    border-top: 0 !important;
+    border-bottom: 0 !important;
+}
+
+thead > tr > th.app-table-frozencol,
+thead > tr > td.app-table-frozencol,
+tfoot > tr > th.app-table-frozencol,
+tfoot > tr > td.app-table-frozencol {
+    border-right: 0 !important;
+}
+
+tfoot > tr > th.app-table-frozencol,
+tfoot > tr > td.app-table-frozencol {
+	border-top: 0 !important;
+}
+
+
+.app-table-frozen {
+    width: 200px !important;
+	min-width: 200px !important; 
+    max-width: 200px !important;
+}
+
+tbody > tr > td.app-table-frozen {
+    background: inherit !important; 
+}
+
+thead > tr > th.app-table-frozen,
+thead > tr > td.app-table-frozen,
+tfoot > tr > th.app-table-frozen,
+tfoot > tr > td.app-table-frozen {
+}
+
+tfoot > tr > th.app-table-frozen,
+tfoot > tr > td.app-table-frozen {
+}

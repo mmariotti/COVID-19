@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
+    <persistence-unit name="covid19" transaction-type="JTA">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <jta-data-source>${app.datasource}</jta-data-source>
+
+        <exclude-unlisted-classes>false</exclude-unlisted-classes>
+
+        <!-- <shared-cache-mode>NONE</shared-cache-mode> -->
+
+        <properties>
+            <!-- Wildfly -->
+            <property name="jboss.as.jpa.providerModule" value="org.hibernate:${hibernate.version}" />
+            
+            
+            <!-- Hibernate -->
+            <property name="hibernate.dialect" value="${jpa.hibernate.dialect}" />
+            <property name="hibernate.query.validate_parameters" value="${jpa.hibernate.query.validate_parameters}" />
+            <property name="hibernate.enable_lazy_load_no_trans" value="true" />
+            <property name="hibernate.default_batch_fetch_size" value="256" />
+            <property name="hibernate.batch_fetch_style" value="DYNAMIC" />
+            <property name="hibernate.jdbc.batch_size" value="256" />
+            <property name="hibernate.jdbc.fetch_size" value="256" />
+            <property name="hibernate.jdbc.batch_versioned_data" value="true" />
+            <property name="hibernate.event.merge.entity_copy_observer" value="allow" />
+            <property name="hibernate.create_empty_composites.enabled" value="true" />
+            
+            <!-- DO NOT USE! this breaks tree persist order (children before parents) when used with inheritance: see Duty tree-->
+            <!-- <property name="hibernate.order_inserts" value="true"/> -->
+            <!-- <property name="hibernate.order_updates" value="true"/> -->
+
+            <!-- <property name="hibernate.flushMode" value="COMMIT" /> -->
+            <!-- <property name="hibernate.discriminator.force_in_select" value="true"/> -->
+            <!-- <property name="hibernate.session_factory.interceptor" value="it.shape.core.hibernate.HibernateInterceptor" /> -->
+
+            <!-- <property name="hibernate.ejb.use_class_enhancer" value="true"/> -->
+            <!-- <property name="hibernate.enhancer.enableDirtyTracking" value="true"/> -->
+			<!-- <property name="hibernate.enhancer.enableLazyInitialization" value="true"/> -->
+            <!-- <property name="hibernate.enhancer.enableAssociationManagement" value="true"/> -->
+
+            <!-- <property name="hibernate.show_sql" value="true" /> -->
+            <!-- <property name="hibernate.format_sql" value="true" /> -->
+            <!-- <property name="hibernate.use_sql_comments" value="true" /> -->
+
+            
+            <!-- Validation -->
+            <!-- <property name="javax.persistence.validation.mode" value="CALLBACK" /> -->
+            
+            
+            <!-- Datasource Connection -->
+            <property name="javax.persistence.jdbc.driver" value="${jdbc.driverClass}" />
+            <property name="javax.persistence.jdbc.url" value="${jdbc.url}" />
+            <property name="javax.persistence.jdbc.user" value="${jdbc.user}" />
+            <property name="javax.persistence.jdbc.password" value="${jdbc.password}" />
+            
+            
+            <!-- Cache Control -->
+            <!-- <property name="javax.persistence.cache.retrieveMode" value="USE" /> -->
+            <!-- <property name="javax.persistence.cache.storeMode" value="REFRESH" /> -->
+
+
+            <!-- Schema Generation -->
+            <property name="javax.persistence.schema-generation.database.action" value="${jpa.schema.generation}" />
+            <!-- <property name="javax.persistence.schema-generation.create-source" value="metadata"/> -->
+            <!-- <property name="javax.persistence.schema-generation.create-database-schemas" value="false"/> -->
+            <!-- <property name="javax.persistence.database-product-name" value="Oracle" /> -->
+            <!-- <property name="javax.persistence.database-major-version" value="11" /> -->
+            <!-- <property name="javax.persistence.database-minor-version" value="2" /> -->
+            <!-- <property name="hibernate.ejb.naming_strategy" value="org.hibernate.cfg.ImprovedNamingStrategy" /> -->
+        </properties>
+    </persistence-unit>
+</persistence>
