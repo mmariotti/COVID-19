@@ -19,3 +19,7 @@ Thumbs.db
 
 # Changelog test
 changelog.txt
+<<<<<<< Upstream, based on branch 'master' of https://github.com/pcm-dpc/COVID-19
+=======
+/target/
+>>>>>>> 20a9cbc added JavaEE app
