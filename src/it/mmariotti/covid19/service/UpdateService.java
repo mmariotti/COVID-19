@@ -2,6 +2,7 @@ package it.mmariotti.covid19.service;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -64,6 +65,8 @@ public class UpdateService
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void init()
 	{
+		logger.info("init() called");
+
 		CriteriaBuilder builder = em.getCriteriaBuilder();
 
 		CriteriaQuery<Date> dateQuery = builder.createQuery(Date.class);
@@ -80,6 +83,8 @@ public class UpdateService
 			// ignore
 		}
 
+		logger.info("init() lastUpdate: {}", lastUpdate);
+
 		if(lastUpdate != null)
 		{
 			CriteriaQuery<Regione> query = builder.createQuery(Regione.class);
@@ -89,33 +94,45 @@ public class UpdateService
 			query.where(builder.equal(root.get(Regione_.data), lastUpdate));
 
 			latestData = em.createQuery(query).getResultList();
-			lastSummary = StreamEx.of(latestData).reduce(new Regione(), Regione::add);
+
+			StreamEx.of(latestData)
+				.filterBy(Regione::getDenominazione, "ITALIA")
+				.findAny()
+				.ifPresent(x ->
+				{
+					lastSummary = x;
+					latestData.remove(x);
+				});
 		}
 		else
 		{
 			lastUpdate = INIT_DATE;
 			latestData = new ArrayList<>();
+			lastSummary = new Regione();
+			lastSummary.setDenominazione("ITALIA");
 		}
 
+		logger.info("init() latestData: {}", latestData.size());
 
-		Calendar currentCal = Calendar.getInstance();
-		currentCal.set(Calendar.HOUR_OF_DAY, 0);
-		currentCal.set(Calendar.MINUTE, 0);
-		currentCal.set(Calendar.SECOND, 0);
-		currentCal.set(Calendar.MILLISECOND, 0);
 
 		Calendar latestCal = Calendar.getInstance();
 		latestCal.clear();
 		latestCal.setTime(lastUpdate);
 		latestCal.add(Calendar.DATE, 1);
 
-		while(latestCal.compareTo(currentCal) <= 0)
+		logger.info("init() latestCal: {}", latestCal.getTime());
+
+		while(true)
 		{
 			Date date = latestCal.getTime();
 
 			try
 			{
-				fetch(date);
+				boolean fetched = fetch(date);
+				if(!fetched)
+				{
+					break;
+				}
 			}
 			catch(Exception e)
 			{
@@ -125,40 +142,45 @@ public class UpdateService
 			latestCal.add(Calendar.DATE, 1);
 		}
 
+		logger.info("init() completed");
 	}
 
-	@Schedule(minute = "*/10", persistent = false)
+
+	@Schedule(second = "30", minute = "2/10", hour = "*", persistent = false)
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void update()
 	{
-		Calendar currentCal = Calendar.getInstance();
-		currentCal.set(Calendar.HOUR_OF_DAY, 0);
-		currentCal.set(Calendar.MINUTE, 0);
-		currentCal.set(Calendar.SECOND, 0);
-		currentCal.set(Calendar.MILLISECOND, 0);
+		logger.info("update() called");
 
 		Calendar latestCal = Calendar.getInstance();
 		latestCal.clear();
 		latestCal.setTime(lastUpdate);
+		latestCal.add(Calendar.DATE, 1);
 
-		if(latestCal.before(currentCal))
+		Date date = latestCal.getTime();
+		logger.info("update() latestCal: {}", date);
+
+		try
 		{
-			try
-			{
-				fetch(latestCal.getTime());
-			}
-			catch(Exception e)
-			{
-				logger.error(e.getMessage(), e);
-			}
+			fetch(date);
 		}
+		catch(Exception e)
+		{
+			logger.error(e.getMessage(), e);
+		}
+
+		logger.info("update() completed");
 	}
 
-	private void fetch(Date date) throws Exception
+	private boolean fetch(Date date) throws Exception
 	{
+		logger.info("fetch() date: {}", date);
+
 		String param = PARAM_DATE_FORMAT.format(date);
 		String spec = String.format(URL_TEMPLATE, param);
 		URL url = new URL(spec);
+
+		logger.info("fetch() url: {}", url);
 
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 		connection.setRequestMethod("GET");
@@ -167,14 +189,21 @@ public class UpdateService
 		try
 		{
 			int code = connection.getResponseCode();
+			logger.info("fetch() code: {}", code);
+
 			if(code != 200)
 			{
-				return;
+				return false;
 			}
 
 			Map<String, Regione> oldMap = StreamEx.of(latestData).toMap(Regione::getDenominazione, x -> x);
 			List<Regione> newData = new ArrayList<>();
 			Regione newSummary = new Regione();
+			newSummary.setDenominazione("ITALIA");
+			newSummary.setCodice(0);
+			newSummary.setLatitudine(BigDecimal.ZERO);
+			newSummary.setLongitudine(BigDecimal.ZERO);
+			newSummary.setStato("ITA");
 
 			try(BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8)))
 			{
@@ -196,18 +225,36 @@ public class UpdateService
 
 					newData.add(regione);
 					newSummary.add(regione);
-				}
 
-				em.flush();
+					Date regionDate = regione.getData();
+					if(regionDate.after(lastUpdate))
+					{
+						lastUpdate = regionDate;
+					}
+				}
 			}
+
+			newSummary.setData(lastUpdate);
+
+			em.persist(newSummary);
+
+			em.flush();
 
 			latestData = newData;
 			lastUpdate = date;
 			lastSummary = newSummary;
+
+			logger.info("fetch() latestData: {}", latestData);
+			logger.info("fetch() lastUpdate: {}", lastUpdate);
+			logger.info("fetch() lastSummary: {}", lastSummary);
+
+			return true;
 		}
 		finally
 		{
 			connection.disconnect();
+
+			logger.info("fetch() completed");
 		}
 	}
 
@@ -227,5 +274,20 @@ public class UpdateService
 	public Regione getLastSummary()
 	{
 		return lastSummary;
+	}
+
+	public List<Regione> getRegionData(String name)
+	{
+		CriteriaBuilder builder = em.getCriteriaBuilder();
+		CriteriaQuery<Regione> query = builder.createQuery(Regione.class);
+		Root<Regione> root = query.from(Regione.class);
+
+		query.select(root);
+		query.where(builder.equal(root.get(Regione_.denominazione), name));
+		query.orderBy(builder.asc(root.get(Regione_.data)));
+
+		List<Regione> resultList = em.createQuery(query).getResultList();
+
+		return resultList;
 	}
 }

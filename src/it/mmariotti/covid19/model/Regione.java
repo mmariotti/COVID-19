@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Index;
@@ -12,6 +13,8 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import org.apache.commons.lang3.StringUtils;
+import one.util.streamex.EntryStream;
+import one.util.streamex.StreamEx;
 
 
 @Entity
@@ -25,6 +28,37 @@ public class Regione implements Serializable
 	private static final long serialVersionUID = 1L;
 
 	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+	private static final Map<String, Long> POPULATION_MAP = EntryStream.<String, Long> empty()
+		.append("Abruzzo", 1_322_000L)
+		.append("Basilicata", 570_000L)
+		.append("Bolzano", 533_000L)
+		.append("Calabria", 1_965_000L)
+		.append("Campania", 5_839_000L)
+		.append("Emilia Romagna", 4_448_000L)
+		.append("Friuli Venezia Giulia", 1_217_000L)
+		.append("Lazio", 5_898_000L)
+		.append("Liguria", 1_565_000L)
+		.append("Lombardia", 10_018_000L)
+		.append("Marche", 1_538_000L)
+		.append("Molise", 310_000L)
+		.append("Piemonte", 4_392_000L)
+		.append("Puglia", 4_063_000L)
+		.append("Sardegna", 1_653_000L)
+		.append("Sicilia", 5_056_000L)
+		.append("Toscana", 3_742_000L)
+		.append("Trento", 541_000L)
+		.append("Umbria", 888_000L)
+		.append("Valle d'Aosta", 126_000L)
+		.append("Veneto", 4_907_000L)
+		.append("ITALIA", 60_591_000L)
+		.toImmutableMap();
+
+	private static final Map<String, String> NAME_MAP = EntryStream.<String, String> empty()
+		.append("P.A. Bolzano", "Bolzano")
+		.append("Friuli V. G.", "Friuli Venezia Giulia")
+		.append("P.A. Trento", "Trento")
+		.toImmutableMap();
 
 	@Id
 	@Temporal(TemporalType.TIMESTAMP)
@@ -91,14 +125,19 @@ public class Regione implements Serializable
 
 		try
 		{
-			String[] split = StringUtils.split(line, ',');
+			String[] split = StreamEx.of(StringUtils.split(line, ','))
+				.map(StringUtils::trimToEmpty)
+				.toArray(String[]::new);
 
 			int i = 0;
 			Regione r = new Regione();
 			r.data = DATE_FORMAT.parse(split[i++]);
 			r.stato = split[i++];
 			r.codice = Integer.parseInt(split[i++]);
-			r.denominazione = split[i++];
+
+			String name = split[i++];
+			r.denominazione = NAME_MAP.getOrDefault(name, name);
+
 			r.latitudine = new BigDecimal(split[i++]);
 			r.longitudine = new BigDecimal(split[i++]);
 
@@ -163,6 +202,57 @@ public class Regione implements Serializable
 		tamponiDelta += regione.tamponiDelta;
 
 		return this;
+	}
+
+	public long getPopolazione()
+	{
+		return POPULATION_MAP.getOrDefault(denominazione, 0L);
+	}
+
+	public double getLetalita()
+	{
+		return (double) deceduti / (deceduti + guariti);
+	}
+
+	public double getLetalitaDelta()
+	{
+		if(deceduti + guariti == 0)
+		{
+			return 0;
+		}
+
+		double value = getLetalita();
+
+		double prev;
+		if(deceduti - decedutiDelta + guariti - guaritiDelta == 0)
+		{
+			prev = 0;
+		}
+		else
+		{
+			prev = (double) (deceduti - decedutiDelta) / (deceduti - decedutiDelta + guariti - guaritiDelta);
+		}
+
+		double result = value - prev;
+
+		return Double.isNaN(result) ? 0 : result;
+	}
+
+	public double getDensita()
+	{
+		return (double) positiviTotali / tamponi;
+	}
+
+	public double getDensitaDelta()
+	{
+		if(tamponiDelta == 0)
+		{
+			return 0;
+		}
+
+		double value = getDensita();
+		double prev = (double) positiviTotali - positiviTotaliDelta / (tamponi - tamponiDelta);
+		return value - prev;
 	}
 
 	public Date getData()
