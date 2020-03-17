@@ -5,8 +5,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.PropertyResourceBundle;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
+import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 import org.omnifaces.util.Faces;
@@ -59,12 +61,14 @@ public class Controller implements Serializable
 		Faces.setRequestAttribute("chartProperty", property);
 
 		chartModel = new BarChartModel();
-
-		LineChartSeries deltaSeries = new LineChartSeries();
-		deltaSeries.setLabel("Increment");
-
-		LineChartSeries totalSeries = new LineChartSeries();
-		totalSeries.setLabel("Total");
+		chartModel.setLegendPosition("s");
+		chartModel.setLegendPlacement(LegendPlacement.OUTSIDEGRID);
+		chartModel.setLegendCols(2);
+		chartModel.setLegendRows(1);
+		chartModel.setMouseoverHighlight(true);
+		chartModel.setShowDatatip(true);
+		chartModel.setShowPointLabels(true);
+//		chartModel.setStacked(true);
 
 		if(percent)
 		{
@@ -72,33 +76,34 @@ public class Controller implements Serializable
 			yAxis.setTickFormat("%.2f%%");
 		}
 
+		FacesContext context = FacesContext.getCurrentInstance();
+		PropertyResourceBundle bundle = context.getApplication().evaluateExpressionGet(context, "#{bundle}", PropertyResourceBundle.class);
+
+		LineChartSeries totalSeries = new LineChartSeries();
+		chartModel.addSeries(totalSeries);
+		totalSeries.setLabel(bundle.getString("total"));
+
+		LineChartSeries deltaSeries = new LineChartSeries();
+		deltaSeries.setLabel(bundle.getString("increment"));
+		chartModel.addSeries(deltaSeries);
+
 		List<Regione> data = service.getRegionData(regione.getDenominazione());
 		for(Regione r : data)
 		{
 			String key = DATE_FORMAT.format(r.getData());
 
-			Number total = Faces.resolveExpressionGet(r, property);
-			Number delta = Faces.resolveExpressionGet(r, property + "Delta");
+			double total = Faces.<Number> resolveExpressionGet(r, property).doubleValue();
+			double delta = Faces.<Number> resolveExpressionGet(r, property + "Delta").doubleValue();
 
 			if(percent)
 			{
-				total = total.doubleValue() * 100;
-				delta = delta.doubleValue() * 100;
+				total = total * 100;
+				delta = delta * 100;
 			}
 
 			deltaSeries.set(key, delta);
 			totalSeries.set(key, total);
 		}
-
-		chartModel.addSeries(totalSeries);
-		chartModel.addSeries(deltaSeries);
-
-		chartModel.setLegendPosition("nw");
-		chartModel.setLegendPlacement(LegendPlacement.OUTSIDEGRID);
-		chartModel.setMouseoverHighlight(true);
-		chartModel.setShowDatatip(true);
-		chartModel.setShowPointLabels(true);
-//		chartModel.setStacked(true);
 
 		RequestContext.getCurrentInstance().execute("PF('chartDialog').show()");
 	}

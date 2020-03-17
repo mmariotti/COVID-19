@@ -197,3 +197,9 @@ th button.ui-button.ui-button-icon-only .ui-button-text,
 td button.ui-button.ui-button-icon-only .ui-button-text {
 	padding: 0;
 }
+
+
+
+td.jqplot-table-legend-label {
+	padding-right: 16px;
+}

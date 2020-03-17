@@ -272,7 +272,7 @@
 
 		<p:dialog id="chartDialog" widgetVar="chartDialog" modal="true" header="#{chartRegione} - #{bundle[chartProperty]}"
 			width="90vw" resizable="false">
-			<p:chart rendered="#{controller.chartModel != null}" type="bar" model="#{controller.chartModel}" style="height:300px" />
+			<p:chart rendered="#{controller.chartModel != null}" type="bar" model="#{controller.chartModel}" style="height:80vh" responsive="true" />
 		</p:dialog>
 	</h:body>
 </f:view>
