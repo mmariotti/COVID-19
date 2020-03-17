@@ -216,26 +216,10 @@ public class Regione implements Serializable
 
 	public double getLetalitaDelta()
 	{
-		if(deceduti + guariti == 0)
-		{
-			return 0;
-		}
-
 		double value = getLetalita();
-
-		double prev;
-		if(deceduti - decedutiDelta + guariti - guaritiDelta == 0)
-		{
-			prev = 0;
-		}
-		else
-		{
-			prev = (double) (deceduti - decedutiDelta) / (deceduti - decedutiDelta + guariti - guaritiDelta);
-		}
-
+		double prev = ((double) deceduti - decedutiDelta) / (deceduti - decedutiDelta + guariti - guaritiDelta);
 		double result = value - prev;
-
-		return Double.isNaN(result) ? 0 : result;
+		return result;
 	}
 
 	public double getDensita()
@@ -245,14 +229,10 @@ public class Regione implements Serializable
 
 	public double getDensitaDelta()
 	{
-		if(tamponiDelta == 0)
-		{
-			return 0;
-		}
-
 		double value = getDensita();
-		double prev = (double) positiviTotali - positiviTotaliDelta / (tamponi - tamponiDelta);
-		return value - prev;
+		double prev = (double) (positiviTotali - positiviTotaliDelta) / (tamponi - tamponiDelta);
+		double result = value - prev;
+		return result;
 	}
 
 	public Date getData()

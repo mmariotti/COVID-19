@@ -192,3 +192,8 @@ th button.ui-button.ui-button-icon-only,
 td button.ui-button.ui-button-icon-only {
 	width: 16px;
 }
+
+th button.ui-button.ui-button-icon-only .ui-button-text,
+td button.ui-button.ui-button-icon-only .ui-button-text {
+	padding: 0;
+}
