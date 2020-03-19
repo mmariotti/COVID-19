@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.DoubleSummaryStatistics;
 import java.util.List;
 import java.util.PropertyResourceBundle;
 import javax.annotation.PostConstruct;
@@ -69,6 +70,10 @@ public class Controller implements Serializable
 		chartModel.setShowDatatip(true);
 		chartModel.setShowPointLabels(true);
 //		chartModel.setStacked(true);
+		chartModel.setExtender("chartExtender");
+
+		Axis xAxis = chartModel.getAxis(AxisType.X);
+		xAxis.setTickAngle(60);
 
 		if(percent)
 		{
@@ -79,13 +84,13 @@ public class Controller implements Serializable
 		FacesContext context = FacesContext.getCurrentInstance();
 		PropertyResourceBundle bundle = context.getApplication().evaluateExpressionGet(context, "#{bundle}", PropertyResourceBundle.class);
 
-		LineChartSeries totalSeries = new LineChartSeries();
+		LineChartSeries totalSeries = new LineChartSeries(bundle.getString("total"));
 		chartModel.addSeries(totalSeries);
-		totalSeries.setLabel(bundle.getString("total"));
 
-		LineChartSeries deltaSeries = new LineChartSeries();
-		deltaSeries.setLabel(bundle.getString("increment"));
+		LineChartSeries deltaSeries = new LineChartSeries(bundle.getString("increment"));
 		chartModel.addSeries(deltaSeries);
+
+		DoubleSummaryStatistics stats = new DoubleSummaryStatistics();
 
 		List<Regione> data = service.getRegionData(regione.getDenominazione());
 		for(Regione r : data)
@@ -103,6 +108,8 @@ public class Controller implements Serializable
 
 			deltaSeries.set(key, delta);
 			totalSeries.set(key, total);
+
+			stats.accept(total);
 		}
 
 		RequestContext.getCurrentInstance().execute("PF('chartDialog').show()");

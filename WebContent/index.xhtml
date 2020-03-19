@@ -272,8 +272,52 @@
 
 		<p:dialog id="chartDialog" widgetVar="chartDialog" modal="true" header="#{chartRegione} - #{bundle[chartProperty]}"
 			width="90vw" resizable="false">
-			<p:chart rendered="#{controller.chartModel != null}" type="bar" model="#{controller.chartModel}" style="height:80vh" responsive="true" />
+			<p:chart rendered="#{controller.chartModel != null}" type="bar" model="#{controller.chartModel}" style="height:80vh"
+				responsive="true" />
 		</p:dialog>
+
+		<h:outputScript name="jqplot.canvasOverlay.min.js" target="head" />
+		<h:outputScript target="head">
+			function chartExtender()
+			{
+				/*this.cfg.axes = {
+                    xaxis: {
+                        renderer: $.jqplot.DateAxisRenderer,
+                        rendererOptions: {
+                            tickRenderer: $.jqplot.CanvasAxisTickRenderer
+                        },
+                        numberTicks: 30,
+                        tickOptions: {
+                            fontSize: '10pt',
+                            angle: -50,
+                            formatString: '%Y-%m-%d'
+                        },
+                        title: 'Datum'
+                    }
+                };*/ 
+			
+				this.cfg.canvasOverlay = {
+		            show: true,
+		            objects: [
+	            	{
+		            	verticalLine: {
+				            shadow: false,
+				            lineWidth: 2,
+				            color: "rgb(255,0,0)",
+				            x: 16.5 
+						}
+					}, 
+					{
+						verticalLine: {
+				            shadow: false,
+				            lineWidth: 2,
+				            color: "rgb(0,255,0)",
+				            x: 31.5 
+						}
+					}]
+				};
+			};
+		</h:outputScript>
 	</h:body>
 </f:view>
 </html>
