@@ -25,7 +25,7 @@
 		<jsf.defaultResourceMaxAge>604800000</jsf.defaultResourceMaxAge>
 		<jsf.faceletsRefreshPeriod>0</jsf.faceletsRefreshPeriod>
 
-		<jpa.schema.generation>none</jpa.schema.generation>
+		<jpa.schema.generation>update</jpa.schema.generation>
 		<jpa.hibernate.dialect>org.hibernate.dialect.MySQL57Dialect</jpa.hibernate.dialect>
 		<jpa.hibernate.query.validate_parameters>true</jpa.hibernate.query.validate_parameters>
 
@@ -39,6 +39,7 @@
 		<buildnumber-maven-plugin.version>1.4</buildnumber-maven-plugin.version>
 		<commons-beanutils.version>1.9.4</commons-beanutils.version>
 		<commons-codec.version>1.13</commons-codec.version>
+		<commons-csv.version>1.8</commons-csv.version>
 		<commons-collections4.version>4.4</commons-collections4.version>
 		<commons-digester.version>2.1</commons-digester.version>
 		<commons-email.version>1.5</commons-email.version>
@@ -108,6 +109,26 @@
 		<jboss.home>C:\Shape\servers\wildfly-${wildfly.version}</jboss.home>
 	</properties>
 
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.wildfly</groupId>
+				<artifactId>wildfly-parent</artifactId>
+				<version>${wildfly.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.wildfly.bom</groupId>
+				<artifactId>wildfly-javaee7-with-tools</artifactId>
+				<version>${wildfly.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 
 	<dependencies>
 		<!-- ECLIPSE COMPILER -->
@@ -132,23 +153,22 @@
 			<version>${javaee.version}</version>
 			<scope>provided</scope>
 		</dependency>
-
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-entitymanager</artifactId>
-			<version>${hibernate.version}</version>
-			<scope>provided</scope>
-		</dependency>
+		
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
-			<version>${hibernate.version}</version>
+			<version>${hibernate.version}</version><!--$NO-MVN-MAN-VER$-->
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-jpamodelgen</artifactId>
-			<version>${hibernate.version}</version>
+			<version>${hibernate.version}</version><!--$NO-MVN-MAN-VER$-->
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-validator</artifactId>
 			<scope>provided</scope>
 		</dependency>
 
@@ -161,14 +181,14 @@
 		<dependency>
 			<groupId>com.sun.faces</groupId>
 			<artifactId>jsf-impl</artifactId>
-			<version>${mojarra.version}</version>
+			<version>${mojarra.version}</version><!--$NO-MVN-MAN-VER$-->
 			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>1.7.25</version>
+			<version>1.7.25</version><!--$NO-MVN-MAN-VER$-->
 			<scope>provided</scope>
 		</dependency>
 
@@ -198,13 +218,50 @@
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>${commons-io.version}</version>
+			<version>${commons-io.version}</version><!--$NO-MVN-MAN-VER$-->
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-csv</artifactId>
+			<version>${commons-csv.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>one.util</groupId>
 			<artifactId>streamex</artifactId>
 			<version>${streamex.version}</version>
+		</dependency>
+
+
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>${junit-jupiter.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>simple-jndi</groupId>
+			<artifactId>simple-jndi</artifactId>
+			<version>${simple-jndi.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.arquillian.junit</groupId>
+			<artifactId>arquillian-junit-container</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.wildfly.arquillian</groupId>
+			<artifactId>wildfly-arquillian-container-remote</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.shrinkwrap.resolver</groupId>
+			<artifactId>shrinkwrap-resolver-api-maven</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 

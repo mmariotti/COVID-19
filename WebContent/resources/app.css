@@ -120,6 +120,17 @@ input[data-required='true']::placeholder,
 }
 
 
+
+
+.ui-tree .ui-treenode-leaf-icon {
+	vertical-align: middle;
+}
+
+
+
+
+
+
 .app-table-auto {
     table-layout: auto !important;
 }
@@ -136,6 +147,34 @@ input[data-required='true']::placeholder,
 .app-right {
     text-align: right !important;
 }
+
+.app-no-border, 
+.app-facet-table, 
+.app-no-border>.ui-datalist-content,
+.app-no-border>.ui-datagrid-content,
+.app-no-border>tbody, 
+.app-no-border>tbody>tr, 
+.app-no-border>tbody>tr>td,
+.app-no-border>thead 
+.app-no-border>thead>tr, 
+.app-no-border>thead>tr>th, 
+.app-no-border>tr, 
+.app-no-border>tr>td, 
+.app-no-border>tr>th, 
+.app-facet-table>tbody, 
+.app-facet-table>tbody>tr, 
+.app-facet-table>tbody>tr>td, 
+.app-facet-table>thead, 
+.app-facet-table>thead>tr, 
+.app-facet-table>thead>tr>th, 
+.app-facet-table>tr, 
+.app-facet-table>tr>td, 
+.app-facet-table>tr>th {
+    border: 0 !important;
+    border-radius: 0 !important;
+}
+
+
 
 .app-bb-left {
     border-left: 2px solid black !important;
@@ -203,3 +242,11 @@ td button.ui-button.ui-button-icon-only .ui-button-text {
 td.jqplot-table-legend-label {
 	padding-right: 16px;
 }
+
+
+.section {
+    display: flex;
+    justify-content: space-evenly;
+    text-align: center;
+}
+

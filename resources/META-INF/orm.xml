@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence/orm"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence/orm http://xmlns.jcp.org/xml/ns/persistence/orm_2_1.xsd ">
+
+    <named-query name="latestRecord">
+        <query><![CDATA[
+        	select x 
+        	from Record x 
+        	where x.id.region = :region and x.id.registered <= :registered 
+        	order by x.id.registered desc
+        ]]></query>
+    </named-query>
+
+    <named-query name="latestSubRecordList">
+        <query><![CDATA[
+        	select r
+			from Record r
+			where r.id.region.container = :container and r.id.registered = (
+				select max(r2.id.registered)
+				from Record r2
+				where r2.id.region = r.id.region and r2.id.registered <= :registered
+			)
+        ]]></query>
+    </named-query>
+
+    <named-query name="latestRecordList">
+        <query><![CDATA[
+        	select x
+			from Record x
+				join fetch x.id.region r
+			where x.id.registered = (
+				select max(x2.id.registered)
+				from Record x2
+				where x2.id.region = r
+			)
+			order by r.name
+        ]]></query>
+    </named-query>
+
+</entity-mappings>

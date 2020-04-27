@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="#{!empty request.remoteUser ? user.locale.language : request.locale.language}"
+	xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:cc="http://xmlns.jcp.org/jsf/composite" xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+	xmlns:fn="http://xmlns.jcp.org/jsp/jstl/functions" xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions" xmlns:o="http://omnifaces.org/ui"
+	xmlns:of="http://omnifaces.org/functions" xmlns:pt="http://xmlns.jcp.org/jsf/passthrough">
+
+<f:metadata>
+	<o:enableRestorableView/>
+</f:metadata>
+
+<f:view locale="#{request.locale}" contentType="text/html" encoding="UTF-8">
+	<h:head>
+		<meta http-equiv="X-UA-Compatible" content1="IE=Edge,chrome=1" />
+		<title>COVID-19</title>
+		<link rel="shortcut icon" type="image/x-icon" href="#{resource['favicon.ico']}" />
+	</h:head>
+
+	<h:body>
+		<h:outputScript library="omnifaces" name="fixviewstate.js" target="head" />
+		<h:outputStylesheet name="app.css" />
+		<h:outputScript name="app.js" />
+		
+		<h:form>
+
+			<p:layout fullPage="false" stateful="false" style="height:100%; padding:5px;">
+				<p:layoutUnit position="center">
+					<p:dataTable id="table" var="item" value="#{controller.latestData}" tableStyleClass="app-table-auto">
+
+						<p:columnGroup type="header">
+							<p:row>
+								<p:column styleClass="app-table-frozencol">
+									<f:facet name="header">
+										<h:outputLabel value="#{bundle.regione}" title="#{bundle.regione}" />
+									</f:facet>
+								</p:column>
+								<p:column headerText="&amp;nbsp;" styleClass="app-table-frozen" />
+
+								<p:column styleClass="app-bb-left">
+									<f:facet name="header">
+										<h:outputLabel value="#{bundle.popolazione}" title="#{bundle.popolazione}" />
+									</f:facet>
+								</p:column>
+
+								<p:column colspan="3" styleClass="app-bb-left">
+									<f:facet name="header">
+										<h:outputLabel value="#{bundle.letalita}" title="#{bundle.letalita_title}" />
+									</f:facet>
+								</p:column>
+
+								<p:column colspan="3" styleClass="app-bb-left">
+									<f:facet name="header">
+										<h:outputLabel value="#{bundle.densita}" title="#{bundle.densita_title}" />
+									</f:facet>
+								</p:column>
+
+								<c:forEach var="property" items="#{controller.properties}">
+									<p:column colspan="5" styleClass="app-bb-left">
+										<f:facet name="header">
+											<h:outputLabel value="#{bundle[property]}" title="#{bundle[property]}" />
+										</f:facet>
+									</p:column>
+								</c:forEach>
+							</p:row>
+
+							<p:row>
+								<p:column headerText="&amp;nbsp;" sortBy="#{item.denominazione}" styleClass="app-table-frozencol" />
+								<p:column headerText="&amp;nbsp;" styleClass="app-table-frozen" />
+
+								<p:column styleClass="app-bb-left" sortBy="#{item.popolazione}" />
+
+								<p:column styleClass="app-bb-left" headerText="eff" sortBy="#{item.letalita}" />
+								<p:column headerText="inc%" sortBy="#{item.letalitaDelta}" />
+								<p:column headerText="chart" />
+
+								<p:column styleClass="app-bb-left" headerText="eff" sortBy="#{item.densita}" />
+								<p:column headerText="inc%" sortBy="#{item.densitaDelta}" />
+								<p:column headerText="chart" />
+
+								<c:forEach var="property" items="#{controller.properties}">
+									<p:column headerText="tot" sortBy="#{item[property]}" styleClass="app-bb-left" />
+									<p:column headerText="inc" sortBy="#{item[property += 'Delta']}" />
+									<p:column headerText="inc%"
+										sortBy="#{item[property += 'Delta'] / (item[property] - item[property += 'Delta'])}" />
+									<p:column headerText="pop%" sortBy="#{item[property] / item.popolazione}" />
+									<p:column headerText="chart" />
+								</c:forEach>
+							</p:row>
+						</p:columnGroup>
+
+						<p:columnGroup type="footer">
+							<p:row>
+								<p:column footerText="#{bundle.italia}" styleClass="app-table-frozencol" />
+								<p:column footerText="&amp;nbsp;" styleClass="app-table-frozen" />
+
+								<p:column styleClass="app-right app-bb-left">
+									<f:facet name="footer">
+										<h:outputLabel value="#{controller.lastSummary.popolazione}">
+											<f:convertNumber />
+										</h:outputLabel>
+									</f:facet>
+								</p:column>
+
+								<p:column styleClass="app-right app-bb-left">
+									<f:facet name="footer">
+										<h:outputLabel value="#{controller.lastSummary.letalita}">
+											<f:convertNumber pattern="0.00%" />
+										</h:outputLabel>
+									</f:facet>
+								</p:column>
+								<p:column styleClass="app-right">
+									<f:facet name="footer">
+										<h:outputLabel value="#{controller.lastSummary.letalitaDelta}">
+											<f:convertNumber pattern="+0.00%;-0.00%" />
+										</h:outputLabel>
+									</f:facet>
+								</p:column>
+								<p:column styleClass="app-center">
+									<f:facet name="footer">
+										<p:commandButton action="#{controller.showChart(controller.lastSummary, 'letalita', true)}" process="@this"
+											update=":chartDialog" icon="ui-icon-bookmark" />
+									</f:facet>
+								</p:column>
+
+								<p:column styleClass="app-right app-bb-left">
+									<f:facet name="footer">
+										<h:outputLabel value="#{controller.lastSummary.densita}">
+											<f:convertNumber pattern="0.00%" />
+										</h:outputLabel>
+									</f:facet>
+								</p:column>
+								<p:column styleClass="app-right">
+									<f:facet name="footer">
+										<h:outputLabel value="#{controller.lastSummary.densitaDelta}">
+											<f:convertNumber pattern="+0.00%;-0.00%" />
+										</h:outputLabel>
+									</f:facet>
+								</p:column>
+								<p:column styleClass="app-center">
+									<f:facet name="footer">
+										<p:commandButton action="#{controller.showChart(controller.lastSummary, 'densita', true)}" process="@this"
+											update=":chartDialog" icon="ui-icon-bookmark" />
+									</f:facet>
+								</p:column>
+
+								<c:forEach var="property" items="#{controller.properties}">
+									<c:set var="value" value="#{controller.lastSummary[property]}" />
+									<c:set var="delta" value="#{controller.lastSummary[property += 'Delta']}" />
+									<c:set var="percent" value="#{value == delta ? 0 : delta / (value - delta)}" />
+									<c:set var="pop" value="#{value / controller.lastSummary.popolazione}" />
+
+									<p:column styleClass="app-right app-bb-left">
+										<f:facet name="footer">
+											<h:outputLabel value="#{value}">
+												<f:convertNumber />
+											</h:outputLabel>
+										</f:facet>
+									</p:column>
+									<p:column styleClass="app-right">
+										<f:facet name="footer">
+											<h:outputLabel value="#{delta}">
+												<f:convertNumber pattern="+#,##0;-#,##0" />
+											</h:outputLabel>
+										</f:facet>
+									</p:column>
+									<p:column styleClass="app-right">
+										<f:facet name="footer">
+											<h:outputLabel value="#{percent}">
+												<f:convertNumber pattern="+#,##0%;-#,##0%" />
+											</h:outputLabel>
+										</f:facet>
+									</p:column>
+									<p:column styleClass="app-right">
+										<f:facet name="footer">
+											<h:outputLabel value="#{pop}">
+												<f:convertNumber pattern="#,##0.000%" />
+											</h:outputLabel>
+										</f:facet>
+									</p:column>
+									<p:column styleClass="app-center">
+										<f:facet name="footer">
+											<p:commandButton action="#{controller.showChart(controller.lastSummary, property, false)}" process="@this"
+												update=":chartDialog" icon="ui-icon-bookmark" />
+										</f:facet>
+									</p:column>
+								</c:forEach>
+							</p:row>
+						</p:columnGroup>
+
+
+						<p:column styleClass="app-table-frozencol">
+							<h:outputLabel value="#{item.denominazione}" />
+						</p:column>
+						<p:column styleClass="app-table-frozen">&amp;nbsp;</p:column>
+
+						<p:column styleClass="app-right app-bb-left">
+							<h:outputLabel value="#{item.popolazione}">
+								<f:convertNumber />
+							</h:outputLabel>
+						</p:column>
+
+						<p:column styleClass="app-right app-bb-left">
+							<h:outputLabel value="#{item.letalita}">
+								<f:convertNumber pattern="0.00%" />
+							</h:outputLabel>
+						</p:column>
+						<p:column styleClass="app-right">
+							<h:outputLabel value="#{item.letalitaDelta}">
+								<f:convertNumber pattern="+0.00%;-0.00%" />
+							</h:outputLabel>
+						</p:column>
+						<p:column styleClass="app-center">
+							<p:commandButton action="#{controller.showChart(item, 'letalita', true)}" process="@this" update=":chartDialog"
+								icon="ui-icon-bookmark" />
+						</p:column>
+
+						<p:column styleClass="app-right app-bb-left">
+							<h:outputLabel value="#{item.densita}">
+								<f:convertNumber pattern="0.00%" />
+							</h:outputLabel>
+						</p:column>
+						<p:column styleClass="app-right">
+							<h:outputLabel value="#{item.densitaDelta}">
+								<f:convertNumber pattern="+0.00%;-0.00%" />
+							</h:outputLabel>
+						</p:column>
+						<p:column styleClass="app-center">
+							<p:commandButton action="#{controller.showChart(item, 'densita', true)}" process="@this" update=":chartDialog"
+								icon="ui-icon-bookmark" />
+						</p:column>
+
+						<c:forEach var="property" items="#{controller.properties}">
+							<c:set var="value" value="#{item[property]}" />
+							<c:set var="delta" value="#{item[property += 'Delta']}" />
+							<c:set var="percent" value="#{value == delta ? 0 : delta / (value - delta)}" />
+							<c:set var="pop" value="#{value / item.popolazione}" />
+
+							<p:column styleClass="app-right app-bb-left">
+								<h:outputLabel value="#{value}">
+									<f:convertNumber />
+								</h:outputLabel>
+							</p:column>
+							<p:column styleClass="app-right">
+								<h:outputLabel value="#{delta}">
+									<f:convertNumber pattern="+#,##0;-#,##0" />
+								</h:outputLabel>
+							</p:column>
+							<p:column styleClass="app-right">
+								<h:outputLabel value="#{percent}">
+									<f:convertNumber pattern="+#,##0%;-#,##0%" />
+								</h:outputLabel>
+							</p:column>
+							<p:column styleClass="app-right">
+								<h:outputLabel value="#{pop}">
+									<f:convertNumber pattern="#,##0.000%" />
+								</h:outputLabel>
+							</p:column>
+							<p:column styleClass="app-center">
+								<p:commandButton action="#{controller.showChart(item, property, false)}" process="@this" update=":chartDialog"
+									icon="ui-icon-bookmark" />
+							</p:column>
+						</c:forEach>
+					</p:dataTable>
+				</p:layoutUnit>
+
+				<p:layoutUnit position="north" size="50">
+					<div>#{bundle.lastUpdate}: #{controller.lastUpdate}</div>
+				</p:layoutUnit>
+			</p:layout>
+		</h:form>
+
+		<p:growl id="messages" widgetVar="messages" globalOnly="false" autoUpdate="true" showDetail="true" showSummary="true"
+			escape="false" redisplay="true" sticky="false" life="10000" />
+
+		<p:dialog id="chartDialog" widgetVar="chartDialog" modal="true" header="#{chartRegione} - #{bundle[chartProperty]}"
+			width="90vw" resizable="false">
+			<p:chart rendered="#{controller.chartModel != null}" type="bar" model="#{controller.chartModel}" style="height:80vh"
+				responsive="true" />
+		</p:dialog>
+
+		<h:outputScript name="jqplot.canvasOverlay.min.js" target="head" />
+		<h:outputScript target="head">
+			function chartExtender()
+			{
+				/*this.cfg.axes = {
+                    xaxis: {
+                        renderer: $.jqplot.DateAxisRenderer,
+                        rendererOptions: {
+                            tickRenderer: $.jqplot.CanvasAxisTickRenderer
+                        },
+                        numberTicks: 30,
+                        tickOptions: {
+                            fontSize: '10pt',
+                            angle: -50,
+                            formatString: '%Y-%m-%d'
+                        },
+                        title: 'Datum'
+                    }
+                };*/ 
+			
+				this.cfg.canvasOverlay = {
+		            show: true,
+		            objects: [
+	            	{
+		            	verticalLine: {
+				            shadow: false,
+				            lineWidth: 2,
+				            color: "rgb(255,0,0)",
+				            x: 16.5 
+						}
+					}, 
+					{
+						verticalLine: {
+				            shadow: false,
+				            lineWidth: 2,
+				            color: "rgb(0,255,0)",
+				            x: 31.5 
+						}
+					}]
+				};
+			};
+		</h:outputScript>
+	</h:body>
+</f:view>
+</html>
