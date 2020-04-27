@@ -17,6 +17,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.concurrent.Future;
 import javax.ejb.AsyncResult;
 import javax.ejb.Asynchronous;
@@ -38,6 +39,7 @@ import it.mmariotti.covid19.model.RecordId;
 import it.mmariotti.covid19.model.RecordProperty;
 import it.mmariotti.covid19.model.Region;
 import it.mmariotti.covid19.model.Source;
+import it.mmariotti.covid19.util.Util;
 
 
 public abstract class FetchService
@@ -45,6 +47,8 @@ public abstract class FetchService
 	public static final String SEPARATOR = "; ";
 
 	private static final SimpleDateFormat LOG_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+
+	private static final Properties POPULATION = Util.loadProperties("population");
 
 	@PersistenceContext
 	protected EntityManager em;
@@ -224,6 +228,7 @@ public abstract class FetchService
 		if(container == null)
 		{
 			container = new Region("World");
+			setPopulation(container);
 			em.persist(container);
 		}
 
@@ -237,6 +242,7 @@ public abstract class FetchService
 				region = new Region(fullName);
 				region.setContainer(container);
 
+				setPopulation(region);
 				em.persist(region);
 
 				container.getSubRegions().add(region);
@@ -265,6 +271,7 @@ public abstract class FetchService
 				region.setLongitude(longitude);
 			}
 
+			setPopulation(region);
 			em.persist(region);
 
 			container.getSubRegions().add(region);
@@ -351,16 +358,17 @@ public abstract class FetchService
 	protected static BigDecimal getBigDecimal(CSVRecord values, String key)
 	{
 		String value = get(values, key);
+		return StringUtils.isBlank(value) ? null : new BigDecimal(value);
+	}
 
-		try
+	private static void setPopulation(Region region)
+	{
+		String name = region.getName();
+		String value = POPULATION.getProperty(name);
+		if(StringUtils.isNotBlank(value))
 		{
-			return StringUtils.isBlank(value) ? null : new BigDecimal(value);
-		}
-		catch(Exception e)
-		{
-			throw e;
-
-//			return BigDecimal.ZERO;
+			long population = NumberUtils.toLong(value);
+			region.setPopulation(population);
 		}
 	}
 }
