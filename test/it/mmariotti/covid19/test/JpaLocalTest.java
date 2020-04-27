@@ -12,7 +12,6 @@ import javax.persistence.Persistence;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import it.mmariotti.covid19.model.Record;
 
 
@@ -22,7 +21,7 @@ public class JpaLocalTest
 
 	protected static InitialContext ic;
 
-	@Test
+//	@Test
 	public void queryTest() throws Exception
 	{
 		Date date = DateUtils.parseDate("2020-03-10", "yyyy-MM-dd");
