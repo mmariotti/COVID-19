@@ -1,5 +1,6 @@
 package it.mmariotti.covid19.service;
 
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -125,7 +126,7 @@ public class ScheduleService
 		try
 		{
 			Properties prop = new Properties();
-			try(InputStream in = ScheduleService.class.getResourceAsStream("/mail.properties"))
+			try(InputStream in = new FileInputStream("c:\\shape\\covi19-mail.properties"))
 			{
 				prop.load(in);
 			}
