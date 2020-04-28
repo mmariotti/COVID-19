@@ -126,7 +126,7 @@ public class ScheduleService
 		try
 		{
 			Properties prop = new Properties();
-			try(InputStream in = new FileInputStream("c:\\shape\\covi19-mail.properties"))
+			try(InputStream in = new FileInputStream("c:\\shape\\covid19-mail.properties"))
 			{
 				prop.load(in);
 			}
