@@ -15,6 +15,7 @@ import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
+import org.hibernate.Hibernate;
 import it.mmariotti.covid19.service.DataService;
 
 
@@ -23,6 +24,8 @@ import it.mmariotti.covid19.service.DataService;
 public class Region implements Serializable
 {
 	private static final long serialVersionUID = 1L;
+
+	public static final String WORLD = "World";
 
 	@NotNull
 	@Id
@@ -97,7 +100,14 @@ public class Region implements Serializable
 	{
 		if(latestRecord == null)
 		{
-			latestRecord = DataService.lookup().findLatest(this);
+			if(Hibernate.isInitialized(records) && !records.isEmpty())
+			{
+				latestRecord = records.iterator().next();
+			}
+			else
+			{
+				latestRecord = DataService.lookup().findLatest(this);
+			}
 		}
 
 		return latestRecord;

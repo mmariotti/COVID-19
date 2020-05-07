@@ -24,196 +24,143 @@
 		<h:outputStylesheet name="app.css" />
 		<h:outputScript name="app.js" />
 
+		<o:importConstants type="it.mmariotti.covid19.model.RecordProperty" var="RecordProperty" />
 
+		<p:tabView id="tabs" dynamic="true" styleClass="app-tabs-main">
+			<p:tab title="#{bundle.rankings}">
+				rankings
+			</p:tab>
 
-		<h:form>
-			<ui:param name="region" value="#{bean.selectedNode.data}" />
-			<ui:param name="record" value="#{region.latestRecord}" />
+			<p:tab id="tabTree" title="#{bundle.tree}">
+				<h:form id="form">
+					<ui:param name="region" value="#{bean.selectedNode.data}" />
+					<ui:param name="record" value="#{region.latestRecord}" />
 
-			<p:layout fullPage="false" stateful="false" style="height:100%; padding:5px;">
-				<p:layoutUnit position="center">
-					<p:tree widgetVar="tree" var="data" value="#{bean.rootNode}" selectionMode="single" animate="true" highlight="true"
-						styleClass="app-no-border">
-						<p:ajax event="select" listener="#{bean.onSelect}" process="@this" update="@form:detail" />
+					<p:layout fullPage="false" stateful="false" style="height:100%; padding:5px;">
+						<p:layoutUnit position="center">
+							<p:tree id="tree" widgetVar="tree" var="data" value="#{bean.rootNode}" selectionMode="single" animate="true"
+								highlight="true" styleClass="app-no-border">
+								<p:ajax event="select" listener="#{bean.onSelect}" process="@this" update="@form:detail" />
 
-						<p:treeNode>
-							<h:outputLabel value="[#{of:formatDate(data.latestRecord.registered, 'yyyy-MM-dd')}] #{data.name}" />
-						</p:treeNode>
-					</p:tree>
-				</p:layoutUnit>
+								<p:treeNode>
+									<h:outputLabel value="[#{of:formatDate(data.latestRecord.registered, 'yyyy-MM-dd')}] #{data.name}" />
+								</p:treeNode>
+							</p:tree>
+						</p:layoutUnit>
 
-				<p:layoutUnit position="east" size="75%" minSize="150">
-					<p:outputPanel id="detail">
-						<div class="section">
-							<div>
-								<div>#{bundle.region}</div>
-								<div>#{region.name}</div>
-							</div>
-							<div>
-								<div>#{bundle.population}</div>
-								<div>#{of:formatNumberDefault(region.population)}</div>
-							</div>
-							<div>
-								<div>#{bundle.latitude}</div>
-								<div>#{region.latitude}</div>
-							</div>
-							<div>
-								<div>#{bundle.longitude}</div>
-								<div>#{region.longitude}</div>
-							</div>
+						<p:layoutUnit position="east" size="75%" minSize="150">
+							<p:outputPanel id="detail">
+								<div class="section">
+									<div>
+										<div>#{bundle.region}</div>
+										<div>#{region.name}</div>
+									</div>
+									<div>
+										<div>#{bundle.population}</div>
+										<div>#{of:formatNumberDefault(region.population)}</div>
+									</div>
+									<div>
+										<div>#{bundle.latitude}</div>
+										<div>#{region.latitude}</div>
+									</div>
+									<div>
+										<div>#{bundle.longitude}</div>
+										<div>#{region.longitude}</div>
+									</div>
 
-							<div>
-								<div>#{bundle.lastUpdate}</div>
-								<div>#{record.registered}</div>
-							</div>
+									<div>
+										<div>#{bundle.lastUpdate}</div>
+										<div>#{record.registered}</div>
+									</div>
 
-							<div>
-								<div>#{bundle.aggregate}</div>
-								<div>#{record.aggregate}</div>
-							</div>
-						</div>
-
-						<br />
-						<br />
-
-						<p:selectOneRadio id="property" value="#{bean.property}" layout="custom">
-							<p:ajax listener="#{bean.buildCharts}" process="@this" update="chartPanel" />
-							<f:selectItem itemValue="confirmed" itemLabel="#{bundle.confirmed} [#{record.confirmed}]" />
-							<f:selectItem itemValue="deceased" itemLabel="#{bundle.deceased} [#{record.deceased}]" />
-							<f:selectItem itemValue="recovered" itemLabel="#{bundle.recovered} [#{record.recovered}]" />
-							<f:selectItem itemValue="tested" itemLabel="#{bundle.tested} [#{record.tested}]" />
-							<f:selectItem itemValue="quarantined" itemLabel="#{bundle.quarantined} [#{record.quarantined}]" />
-							<f:selectItem itemValue="standardCare" itemLabel="#{bundle.standardCare} [#{record.standardCare}]" />
-							<f:selectItem itemValue="intensiveCare" itemLabel="#{bundle.intensiveCare} [#{record.intensiveCare}]" />
-							<f:selectItem itemValue="confirmedDelta" itemLabel="#{bundle.confirmedDelta} [#{record.confirmedDelta}]" />
-							<f:selectItem itemValue="deceasedDelta" itemLabel="#{bundle.deceasedDelta} [#{record.deceasedDelta}]" />
-							<f:selectItem itemValue="recoveredDelta" itemLabel="#{bundle.recoveredDelta} [#{record.recoveredDelta}]" />
-							<f:selectItem itemValue="testedDelta" itemLabel="#{bundle.testedDelta} [#{record.testedDelta}]" />
-						</p:selectOneRadio>
-
-						<div class="section">
-							<div style="display: flex; align-items: center;">
-								<div style="margin-right: 4px">
-									<p:radioButton for="property" itemIndex="0" />
+									<div>
+										<div>#{bundle.aggregate}</div>
+										<div>#{record.aggregate}</div>
+									</div>
 								</div>
-								<div>
-									<div>#{bundle.confirmed}</div>
-									<div>#{of:formatNumberDefault(record.confirmed)}</div>
-									<div>#{record.confirmedDelta >= 0 ? '+' : ''}#{of:formatNumberDefault(record.confirmedDelta)}</div>
-									<div>#{of:formatNumber(record.confirmedDeltaPercent, '+0.00%;-0.00%')}</div>
-								</div>
-							</div>
-							<div style="display: flex; align-items: center;">
-								<div style="margin-right: 4px">
-									<p:radioButton for="property" itemIndex="1" />
-								</div>
-								<div>
-									<div>#{bundle.deceased}</div>
-									<div>#{of:formatNumberDefault(record.deceased)}</div>
-									<div>#{record.deceasedDelta >= 0 ? '+' : ''}#{of:formatNumberDefault(record.deceasedDelta)}</div>
-									<div>#{of:formatNumber(record.deceasedDeltaPercent, '+0.00%;-0.00%')}</div>
-								</div>
-							</div>
-							<div style="display: flex; align-items: center;">
-								<div style="margin-right: 4px">
-									<p:radioButton for="property" itemIndex="2" />
-								</div>
-								<div>
-									<div>#{bundle.recovered}</div>
-									<div>#{of:formatNumberDefault(record.recovered)}</div>
-									<div>#{record.recoveredDelta >= 0 ? '+' : ''}#{of:formatNumberDefault(record.recoveredDelta)}</div>
-									<div>#{of:formatNumber(record.recoveredDeltaPercent, '+0.00%;-0.00%')}</div>
-								</div>
-							</div>
-							<div style="display: flex; align-items: center;">
-								<div style="margin-right: 4px">
-									<p:radioButton for="property" itemIndex="3" />
-								</div>
-								<div>
-									<div>#{bundle.tested}</div>
-									<div>#{of:formatNumberDefault(record.tested)}</div>
-									<div>#{record.testedDelta >= 0 ? '+' : ''}#{of:formatNumberDefault(record.testedDelta)}</div>
-									<div>#{of:formatNumber(record.testedDeltaPercent, '+0.00%;-0.00%')}</div>
-								</div>
-							</div>
-							<div style="display: flex; align-items: center;">
-								<div style="margin-right: 4px">
-									<p:radioButton for="property" itemIndex="4" />
-								</div>
-								<div>
-									<div>#{bundle.quarantined}</div>
-									<div>#{of:formatNumberDefault(record.quarantined)}</div>
-									<div>#{record.quarantinedDelta >= 0 ? '+' : ''}#{of:formatNumberDefault(record.quarantinedDelta)}</div>
-									<div>#{of:formatNumber(record.quarantinedDeltaPercent, '+0.00%;-0.00%')}</div>
-								</div>
-							</div>
-							<div style="display: flex; align-items: center;">
-								<div style="margin-right: 4px">
-									<p:radioButton for="property" itemIndex="5" />
-								</div>
-								<div>
-									<div>#{bundle.standardCare}</div>
-									<div>#{of:formatNumberDefault(record.standardCare)}</div>
-									<div>#{record.standardCareDelta >= 0 ? '+' : ''}#{of:formatNumberDefault(record.standardCareDelta)}</div>
-									<div>#{of:formatNumber(record.standardCareDeltaPercent, '+0.00%;-0.00%')}</div>
-								</div>
-							</div>
-							<div style="display: flex; align-items: center;">
-								<div style="margin-right: 4px">
-									<p:radioButton for="property" itemIndex="6" />
-								</div>
-								<div>
-									<div>#{bundle.intensiveCare}</div>
-									<div>#{of:formatNumberDefault(record.intensiveCare)}</div>
-									<div>#{record.intensiveCareDelta >= 0 ? '+' : ''}#{of:formatNumberDefault(record.intensiveCareDelta)}</div>
-									<div>#{of:formatNumber(record.intensiveCareDeltaPercent, '+0.00%;-0.00%')}</div>
-								</div>
-							</div>
-						</div>
 
-						<br />
-						<br />
+								<br />
 
-						<div class="section">
-							<div>
-								<div>#{bundle.active}</div>
-								<div>#{of:formatNumberDefault(record.active)}</div>
-								<div>#{record.activeDelta >= 0 ? '+' : ''}#{of:formatNumberDefault(record.activeDelta)}</div>
-								<div>#{of:formatNumber(record.activeDeltaPercent, '+0.00%;-0.00%')}</div>
-							</div>
-							<div>
-								<div>#{bundle.closed}</div>
-								<div>#{of:formatNumberDefault(record.closed)}</div>
-								<div>#{record.closedDelta >= 0 ? '+' : ''}#{of:formatNumberDefault(record.closedDelta)}</div>
-								<div>#{of:formatNumber(record.closedDeltaPercent, '+0.00%;-0.00%')}</div>
-							</div>
-							<div>
-								<div>#{bundle.hospitalized}</div>
-								<div>#{of:formatNumberDefault(record.hospitalized)}</div>
-								<div>#{record.hospitalizedDelta >= 0 ? '+' : ''}#{of:formatNumberDefault(record.hospitalizedDelta)}</div>
-								<div>#{of:formatNumber(record.hospitalizedDeltaPercent, '+0.00%;-0.00%')}</div>
-							</div>
-							<div>
-								<div>#{bundle.workload}</div>
-								<div>#{of:formatNumberDefault(record.workload)}</div>
-								<div>#{record.workloadDelta >= 0 ? '+' : ''}#{of:formatNumberDefault(record.workloadDelta)}</div>
-								<div>#{of:formatNumber(record.workloadDeltaPercent, '+0.00%;-0.00%')}</div>
-							</div>
+								<div class="section">
+									<div>
+										<div>#{bundle.lethality}</div>
+										<div>#{of:formatNumber(record.lethality, '0.00%')}</div>
+										<div>#{of:formatNumber(record.lethalityDelta, '+0.00%;-0.00%')}</div>
+										<div>#{of:formatNumber(record.lethalityLatest, '0.00%')}</div>
+									</div>
+									<div>
+										<div>#{bundle.growth}</div>
+										<div>#{of:formatNumberDefault(record.growth)}</div>
+									</div>
 
+									<div>
+										<div>#{bundle.testDensity}</div>
+										<div>#{of:formatNumber(record.testDensity, '0.00%')}</div>
+										<div>#{of:formatNumber(record.testDensityDelta, '+0.00%;-0.00%')}</div>
+									</div>
 
-							<div>
-								<div>#{bundle.lethality}</div>
-								<div>#{of:formatNumber(record.lethality, '0.00%')}</div>
-								<div>#{of:formatNumber(record.lethalityDelta, '+0.00%;-0.00%')}</div>
-							</div>
-							<div>
-								<div>#{bundle.hypotheticalInfected}</div>
-								<div>#{of:formatNumberDefault(record.hypotheticalInfected)}</div>
-								<div>#{of:formatNumberDefault(record.hypotheticalInfectedDelta)}</div>
-							</div>
-						</div>
+									<div>
+										<div>#{bundle.confirmedHypoteticalFull}</div>
+										<div>#{of:formatNumber(confirmedHypoteticalFull, '0')} #{bundle.days}</div>
+									</div>
 
-						<!-- <br/>
+									<div>
+										<div>#{bundle.activeHypoteticalZero}</div>
+										<div>#{of:formatNumber(record.activeHypoteticalZero, '0')} #{bundle.days}</div>
+									</div>
+								</div>
+
+								<br />
+								<br />
+
+								<p:selectOneRadio id="property" value="#{bean.property}" layout="custom">
+									<p:ajax listener="#{bean.buildCharts}" process="@this" update="chartPanel" />
+									<f:selectItems var="property" value="#{RecordProperty.values()}" itemValue="#{property.name()}" />
+								</p:selectOneRadio>
+
+								<table width="100%">
+									<tr>
+										<c:forEach var="p" items="#{RecordProperty.values()}">
+											<th style="white-space: nowrap; text-align: right">
+												<p:radioButton for="property" itemIndex="#{p.ordinal()}" />
+												<p:outputLabel for="@previous" value="#{bundle[p]}" />
+											</th>
+										</c:forEach>
+									</tr>
+
+									<tr>
+										<c:forEach var="p" items="#{RecordProperty.values()}">
+											<td style="text-align: right">#{of:formatNumberDefault(record[p.name()])}</td>
+										</c:forEach>
+									</tr>
+
+									<tr>
+										<c:forEach var="p" items="#{RecordProperty.values()}">
+											<td style="text-align: right">#{of:formatNumber(record[p.name() += 'Delta'], '+#,##0;-#,##0')}</td>
+										</c:forEach>
+									</tr>
+
+									<tr>
+										<c:forEach var="p" items="#{RecordProperty.values()}">
+											<td style="text-align: right">#{of:formatNumber(record[p.name() += 'DeltaPercent'], '+#,##0.00%;-#,##0.00%')}</td>
+										</c:forEach>
+									</tr>
+
+									<tr>
+										<td style="text-align: right">#{of:formatNumberDefault(record.confirmedHypothetical)}</td>
+										<td style="text-align: right">#{of:formatNumberDefault(record.deceasedHypothetical)}</td>
+										<td style="text-align: right">#{of:formatNumberDefault(record.recoveredHypothetical)}</td>
+										<td style="text-align: right"></td>
+										<td style="text-align: right"></td>
+										<td style="text-align: right"></td>
+										<td style="text-align: right"></td>
+										<td style="text-align: right">#{of:formatNumberDefault(record.activeHypothetical)}</td>
+										<td style="text-align: right">#{of:formatNumberDefault(record.closedHypothetical)}</td>
+										<td style="text-align: right"></td>
+									</tr>
+								</table>
+
+								<!-- <br/>
 						
 						<p:dataTable var="record" value="#{region.records}" rows="10" paginator="true" paginatorPosition="bottom">
 							<p:column headerText="#{bundle.registered}">
@@ -230,57 +177,58 @@
 							</p:column>
 						</p:dataTable> -->
 
-						<br />
-						<br />
+								<br />
+								<br />
 
-						<p:outputPanel id="chartPanel">
-							<div style="display: flex; justify-content: space-evenly;">
-								<label>#{bundle.interval}</label>
+								<p:outputPanel id="chartPanel">
+									<div style="display: flex; justify-content: space-evenly;">
+										<label>#{bundle.interval}</label>
 
-								<div>
-									<p:commandButton action="#{bean.lastWeek}" process="chartPanel" update="chartPanel" value="#{bundle.lastWeek}" />
-									<p:commandButton action="#{bean.lastMonth}" process="chartPanel" update="chartPanel"
-										value="#{bundle.lastMonth}" />
-									<p:commandButton action="#{bean.fullInterval}" process="chartPanel" update="chartPanel"
-										value="#{bundle.fullInterval}" />
-								</div>
+										<div>
+											<p:commandButton action="#{bean.lastWeek}" process="chartPanel" update="chartPanel"
+												value="#{bundle.lastWeek}" />
+											<p:commandButton action="#{bean.lastMonth}" process="chartPanel" update="chartPanel"
+												value="#{bundle.lastMonth}" />
+											<p:commandButton action="#{bean.fullInterval}" process="chartPanel" update="chartPanel"
+												value="#{bundle.fullInterval}" />
+										</div>
 
-								<p:calendar value="#{bean.startDate}" mindate="#{bean.minDate}" maxdate="#{bean.maxDate}" pattern="yyyy-MM-dd"
-									size="8">
-									<p:ajax event="dateSelect" listener="#{bean.buildCharts}" process="chartPanel" update="chartPanel" />
-								</p:calendar>
+										<p:calendar value="#{bean.startDate}" mindate="#{bean.minDate}" maxdate="#{bean.maxDate}" pattern="yyyy-MM-dd"
+											size="8">
+											<p:ajax event="dateSelect" listener="#{bean.buildCharts}" process="chartPanel" update="chartPanel" />
+										</p:calendar>
 
-								<p:calendar value="#{bean.endDate}" mindate="#{bean.minDate}" maxdate="#{bean.maxDate}" pattern="yyyy-MM-dd"
-									size="8">
-									<p:ajax event="dateSelect" listener="#{bean.buildCharts}" process="chartPanel" update="chartPanel" />
-								</p:calendar>
+										<p:calendar value="#{bean.endDate}" mindate="#{bean.minDate}" maxdate="#{bean.maxDate}" pattern="yyyy-MM-dd"
+											size="8">
+											<p:ajax event="dateSelect" listener="#{bean.buildCharts}" process="chartPanel" update="chartPanel" />
+										</p:calendar>
 
-								<p:commandButton action="#{bean.buildCharts}" value="#{bundle.comparisonNode}" process="chartPanel"
-									update="chartPanel">
-									<f:setPropertyActionListener target="#{bean.comparisonNode}" value="#{bean.selectedNode}" />
-								</p:commandButton>
-							</div>
+										<p:commandButton action="#{bean.buildCharts}" value="#{bundle.comparisonNode}" process="chartPanel"
+											update="chartPanel">
+											<f:setPropertyActionListener target="#{bean.comparisonNode}" value="#{bean.selectedNode}" />
+										</p:commandButton>
+									</div>
 
-							<br />
+									<br />
 
-							<p:tabView dynamic="true">
-								<p:tab title="#{bundle[bean.property]}">
-									<p:chart rendered="#{bean.valueChart != null}" type="line" model="#{bean.valueChart}" responsive="true" />
-								</p:tab>
-								<p:tab title="#{bundle[bean.property += 'Delta']}">
-									<p:chart rendered="#{bean.deltaChart != null}" type="line" model="#{bean.deltaChart}" responsive="true" />
-								</p:tab>
-								<p:tab title="#{bundle[bean.property += 'DeltaPercent']}">
-									<p:chart rendered="#{bean.percentChart != null}" type="line" model="#{bean.percentChart}" responsive="true" />
-								</p:tab>
-							</p:tabView>
-						</p:outputPanel>
-					</p:outputPanel>
-				</p:layoutUnit>
-			</p:layout>
-		</h:form>
+									<p:tabView dynamic="true">
+										<p:tab title="#{bundle[bean.property]}">
+											<p:chart rendered="#{bean.valueChart != null}" type="line" model="#{bean.valueChart}" responsive="true" />
+										</p:tab>
+										<p:tab title="#{bundle[bean.property += 'Delta']}">
+											<p:chart rendered="#{bean.deltaChart != null}" type="line" model="#{bean.deltaChart}" responsive="true" />
+										</p:tab>
+										<p:tab title="#{bundle[bean.property += 'DeltaPercent']}">
+											<p:chart rendered="#{bean.percentChart != null}" type="line" model="#{bean.percentChart}" responsive="true" />
+										</p:tab>
+									</p:tabView>
+								</p:outputPanel>
+							</p:outputPanel>
+						</p:layoutUnit>
+					</p:layout>
+				</h:form>
 
-		<!-- <h:outputScript name="jqplot.canvasOverlay.min.js" target="head" />
+				<!-- <h:outputScript name="jqplot.canvasOverlay.min.js" target="head" />
 		<h:outputScript target="head">
 			function chartExtender()
 			{
@@ -321,6 +269,12 @@
 				};
 			};
 		</h:outputScript> -->
+			</p:tab>
+
+			<p:tab title="#{bundle.table}">
+			</p:tab>
+		</p:tabView>
+
 	</h:body>
 </f:view>
 </html>

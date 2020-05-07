@@ -10,7 +10,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
+import java.util.function.Function;
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
 import one.util.streamex.EntryStream;
@@ -65,5 +67,37 @@ public class Util
 	public static Map<String, String> loadMap(String resource)
 	{
 		return loadMap(Util.class.getResource("/" + resource + ".map"), StandardCharsets.UTF_8);
+	}
+
+	public static <T> boolean equals(T left, T right, Function<? super T, ?> mapper)
+	{
+		Object leftObj = applySafe(left, mapper);
+		Object rightObj = applySafe(right, mapper);
+
+		return Objects.equals(leftObj, rightObj);
+	}
+
+	@SafeVarargs
+	public static <T> boolean equals(T left, T right, Function<? super T, ?> mapper, Function<? super T, ?>... mappers)
+	{
+		if(!equals(left, right, mapper))
+		{
+			return false;
+		}
+
+		for(Function<? super T, ?> function : mappers)
+		{
+			if(!equals(left, right, function))
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	public static <T, R> R applySafe(T object, Function<? super T, ? extends R> mapper)
+	{
+		return object == null ? null : mapper.apply(object);
 	}
 }

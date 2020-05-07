@@ -30,152 +30,96 @@ public class Record implements Serializable
 	private RecordId id;
 
 	@Column(nullable = false)
-	protected boolean aggregate = false;
+	private boolean aggregate = false;
 
 	@Transient
-	protected Record previous;
+	private Record previous;
 
 	/* values */
 
-	protected long confirmed;
-
-	protected long deceased;
-
-	protected long recovered;
-
-	protected long tested;
-
-	protected long quarantined;
-
-	protected long standardCare;
-
-	protected long intensiveCare;
+	private long confirmed;
+	private long deceased;
+	private long recovered;
+	private long tested;
+	private long quarantined;
+	private long standardCare;
+	private long intensiveCare;
 
 
 	/* derived */
 
-	protected long active;
-
-	protected long closed;
-
-	protected long hospitalized;
-
-	protected long workload;
+	private long active;
+	private long closed;
+	private long hospitalized;
 
 
 	/* computed */
 
-	protected double lethality;
-
-	protected double lethalityDelta;
-
-	protected double testDensity;
-
-	protected double testDensityDelta;
-
-	protected long hypotheticalInfected;
-
-	protected long hypotheticalInfectedDelta;
+	private double lethality;
+	private double lethalityLatest;
+	private double testDensity;
+	private double growth;
+	private long activeHypoteticalZero;
+	private long confirmedHypoteticalFull;
 
 
 	/* delta */
 
-	protected long confirmedDelta;
+	private long confirmedDelta;
+	private long deceasedDelta;
+	private long recoveredDelta;
+	private long testedDelta;
+	private long quarantinedDelta;
+	private long standardCareDelta;
+	private long intensiveCareDelta;
 
-	protected long deceasedDelta;
+	private long activeDelta;
+	private long closedDelta;
+	private long hospitalizedDelta;
 
-	protected long recoveredDelta;
-
-	protected long testedDelta;
-
-	protected long quarantinedDelta;
-
-	protected long standardCareDelta;
-
-	protected long intensiveCareDelta;
-
-	protected long activeDelta;
-
-	protected long closedDelta;
-
-	protected long hospitalizedDelta;
-
-	protected long workloadDelta;
+	private double lethalityDelta;
+	private double growthDelta;
+	private double testDensityDelta;
 
 
 	/* delta percent */
 
-	protected double confirmedDeltaPercent;
+	private double confirmedDeltaPercent;
+	private double deceasedDeltaPercent;
+	private double recoveredDeltaPercent;
+	private double testedDeltaPercent;
+	private double quarantinedDeltaPercent;
+	private double standardCareDeltaPercent;
+	private double intensiveCareDeltaPercent;
 
-	protected double deceasedDeltaPercent;
-
-	protected double recoveredDeltaPercent;
-
-	protected double testedDeltaPercent;
-
-	protected double quarantinedDeltaPercent;
-
-	protected double standardCareDeltaPercent;
-
-	protected double intensiveCareDeltaPercent;
-
-	protected double activeDeltaPercent;
-
-	protected double closedDeltaPercent;
-
-	protected double hospitalizedDeltaPercent;
-
-	protected double workloadDeltaPercent;
+	private double activeDeltaPercent;
+	private double closedDeltaPercent;
+	private double hospitalizedDeltaPercent;
 
 
 	/* values Population percent */
 
-	protected double confirmedPopulationPercent;
+	private double confirmedPopulationPercent;
+	private double deceasedPopulationPercent;
+	private double recoveredPopulationPercent;
+	private double testedPopulationPercent;
+	private double quarantinedPopulationPercent;
+	private double standardCarePopulationPercent;
+	private double intensiveCarePopulationPercent;
 
-	protected double deceasedPopulationPercent;
-
-	protected double recoveredPopulationPercent;
-
-	protected double testedPopulationPercent;
-
-	protected double quarantinedPopulationPercent;
-
-	protected double standardCarePopulationPercent;
-
-	protected double intensiveCarePopulationPercent;
-
-	protected double activePopulationPercent;
-
-	protected double closedPopulationPercent;
-
-	protected double hospitalizedPopulationPercent;
-
-	protected double workloadPopulationPercent;
+	private double activePopulationPercent;
+	private double closedPopulationPercent;
+	private double hospitalizedPopulationPercent;
 
 
-	/* values delta population percent */
+	/* hypothetical */
 
-	protected double confirmedDeltaPopulationPercent;
+	private long confirmedHypothetical;
+	private long deceasedHypothetical;
+	private long recoveredHypothetical;
+	private long activeHypothetical;
+	private long closedHypothetical;
 
-	protected double deceasedDeltaPopulationPercent;
-
-	protected double recoveredDeltaPopulationPercent;
-
-	protected double testedDeltaPopulationPercent;
-
-	protected double quarantinedDeltaPopulationPercent;
-
-	protected double standardCareDeltaPopulationPercent;
-
-	protected double intensiveCareDeltaPopulationPercent;
-
-	protected double activeDeltaPopulationPercent;
-
-	protected double closedDeltaPopulationPercent;
-
-	protected double hospitalizedDeltaPopulationPercent;
-
-	protected double workloadDeltaPopulationPercent;
 
 	public Record()
 	{
@@ -247,11 +191,16 @@ public class Record implements Serializable
 		return record;
 	}
 
+	public static Record buildRecord(EntityManager em, Region region, Date registered)
+	{
+		return buildRecord(em, new RecordId(region, registered));
+	}
+
 	public void aggregate(Collection<? extends Record> records)
 	{
 		aggregate = true;
 
-		StreamEx.of(RecordProperty.values())
+		StreamEx.of(RecordProperty.getMain())
 			.cross(records)
 			.mapToValue(RecordProperty::get)
 			.grouping(Collectors.summingLong(x -> x))
@@ -288,6 +237,67 @@ public class Record implements Serializable
 		return getClass().getSimpleName() + "{" + getRegion() + "|" + getRegistered() + "}";
 	}
 
+	public boolean equals(Record that, RecordProperty property)
+	{
+		if(that == null)
+		{
+			return false;
+		}
+
+		if(this == that)
+		{
+			return true;
+		}
+
+		return Objects.equals(property.get(this), property.get(that));
+	}
+
+	public boolean equals(Record that, RecordProperty... properties)
+	{
+		if(that == null)
+		{
+			return false;
+		}
+
+		if(this == that)
+		{
+			return true;
+		}
+
+		for(RecordProperty property : properties)
+		{
+			if(!Objects.equals(property.get(this), property.get(that)))
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	public boolean equals(Record that, Iterable<RecordProperty> properties)
+	{
+		if(that == null)
+		{
+			return false;
+		}
+
+		if(this == that)
+		{
+			return true;
+		}
+
+		for(RecordProperty property : properties)
+		{
+			if(!Objects.equals(property.get(this), property.get(that)))
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	public void compute()
 	{
 		if(previous == null)
@@ -300,18 +310,6 @@ public class Record implements Serializable
 		active = confirmed - deceased - recovered;
 		closed = deceased + recovered;
 		hospitalized = standardCare + intensiveCare;
-		workload = hospitalized - closed;
-
-		if(closed != 0)
-		{
-			lethality = (double) deceased / closed;
-		}
-
-		if(tested != 0)
-		{
-			testDensity = (double) confirmed / tested;
-			hypotheticalInfected = (population * confirmed) / tested;
-		}
 
 		long confirmed2 = previous.getConfirmed();
 		long deceased2 = previous.getDeceased();
@@ -323,10 +321,9 @@ public class Record implements Serializable
 		long active2 = previous.getActive();
 		long closed2 = previous.getClosed();
 		long hospitalized2 = previous.getHospitalized();
-		long workload2 = previous.getWorkload();
 		double lethality2 = previous.getLethality();
+		double growth2 = previous.getGrowth();
 		double testDensity2 = previous.getTestDensity();
-		long hypotheticalInfected2 = previous.getHypotheticalInfected();
 
 		confirmedDelta = confirmed - confirmed2;
 		deceasedDelta = deceased - deceased2;
@@ -338,67 +335,41 @@ public class Record implements Serializable
 		activeDelta = active - active2;
 		closedDelta = closed - closed2;
 		hospitalizedDelta = hospitalized - hospitalized2;
-		workloadDelta = workload - workload2;
 		lethalityDelta = lethality - lethality2;
+		growthDelta = growth - growth2;
 		testDensityDelta = testDensity - testDensity2;
-		hypotheticalInfectedDelta = hypotheticalInfected - hypotheticalInfected2;
 
+		confirmedDeltaPercent = confirmed2 != 0 ? (double) confirmedDelta / confirmed2 : 0;
+		deceasedDeltaPercent = deceased2 != 0 ? (double) deceasedDelta / deceased2 : 0;
+		recoveredDeltaPercent = recovered2 != 0 ? (double) recoveredDelta / recovered2 : 0;
+		testedDeltaPercent = tested2 != 0 ? (double) testedDelta / tested2 : 0;
+		quarantinedDeltaPercent = quarantined2 != 0 ? (double) quarantinedDelta / quarantined2 : 0;
+		standardCareDeltaPercent = standardCare2 != 0 ? (double) standardCareDelta / standardCare2 : 0;
+		intensiveCareDeltaPercent = intensiveCare2 != 0 ? (double) intensiveCareDelta / intensiveCare2 : 0;
+		activeDeltaPercent = active2 != 0 ? (double) activeDelta / active2 : 0;
+		closedDeltaPercent = closed2 != 0 ? (double) closedDelta / closed2 : 0;
+		hospitalizedDeltaPercent = hospitalized2 != 0 ? (double) hospitalizedDelta / hospitalized2 : 0;
 
-		if(confirmed2 != 0)
+		if(tested != 0)
 		{
-			confirmedDeltaPercent = (double) confirmedDelta / confirmed2;
+			testDensity = (double) confirmed / tested;
 		}
 
-		if(deceased2 != 0)
+		if(closed != 0)
 		{
-			deceasedDeltaPercent = (double) deceasedDelta / deceased2;
+			lethality = (double) deceased / closed;
 		}
 
-		if(recovered2 != 0)
+		if(closedDelta != 0)
 		{
-			recoveredDeltaPercent = (double) recoveredDelta / recovered2;
+			growth = (double) confirmedDelta / closedDelta;
+			lethalityLatest = (double) deceasedDelta / closedDelta;
 		}
 
-		if(tested2 != 0)
+		if(activeDelta < 0)
 		{
-			testedDeltaPercent = (double) testedDelta / tested2;
+			activeHypoteticalZero = (long) Math.ceil((double) -active / activeDelta);
 		}
-
-		if(quarantined2 != 0)
-		{
-			quarantinedDeltaPercent = (double) quarantinedDelta / quarantined2;
-		}
-
-		if(standardCare2 != 0)
-		{
-			standardCareDeltaPercent = (double) standardCareDelta / standardCare2;
-		}
-
-		if(intensiveCare2 != 0)
-		{
-			intensiveCareDeltaPercent = (double) intensiveCareDelta / intensiveCare2;
-		}
-
-		if(active2 != 0)
-		{
-			activeDeltaPercent = (double) activeDelta / active2;
-		}
-
-		if(closed2 != 0)
-		{
-			closedDeltaPercent = (double) closedDelta / closed2;
-		}
-
-		if(hospitalized2 != 0)
-		{
-			hospitalizedDeltaPercent = (double) hospitalizedDelta / hospitalized2;
-		}
-
-		if(workload2 != 0)
-		{
-			workloadDeltaPercent = workloadDelta / workload2;
-		}
-
 
 		if(population != 0)
 		{
@@ -412,21 +383,24 @@ public class Record implements Serializable
 			activePopulationPercent = (double) active / population;
 			closedPopulationPercent = (double) closed / population;
 			hospitalizedPopulationPercent = (double) hospitalized / population;
-			workloadPopulationPercent = (double) workload / population;
 
-			confirmedDeltaPopulationPercent = (double) confirmedDelta / population;
-			deceasedDeltaPopulationPercent = (double) deceasedDelta / population;
-			recoveredDeltaPopulationPercent = (double) recoveredDelta / population;
-			testedDeltaPopulationPercent = (double) testedDelta / population;
-			quarantinedDeltaPopulationPercent = (double) quarantinedDelta / population;
-			standardCareDeltaPopulationPercent = (double) standardCareDelta / population;
-			intensiveCareDeltaPopulationPercent = (double) intensiveCareDelta / population;
-			activeDeltaPopulationPercent = (double) activeDelta / population;
-			closedDeltaPopulationPercent = (double) closedDelta / population;
-			hospitalizedDeltaPopulationPercent = (double) hospitalizedDelta / population;
-			workloadDeltaPopulationPercent = (double) workloadDelta / population;
+			if(tested > 0)
+			{
+				confirmedHypothetical = (population * confirmed) / tested;
+				deceasedHypothetical = (population * deceased) / tested;
+				recoveredHypothetical = (population * recovered) / tested;
+				activeHypothetical = (population * active) / tested;
+				closedHypothetical = (population * closed) / tested;
+
+				if(confirmedDelta > 0)
+				{
+					confirmedHypoteticalFull = (long) ((population - confirmedHypothetical) / (population * confirmedDelta * testDensity));
+				}
+			}
+
 		}
 	}
+
 
 	public RecordId getId()
 	{
@@ -588,16 +562,6 @@ public class Record implements Serializable
 		this.hospitalized = hospitalized;
 	}
 
-	public long getWorkload()
-	{
-		return workload;
-	}
-
-	public void setWorkload(long workload)
-	{
-		this.workload = workload;
-	}
-
 	public double getLethality()
 	{
 		return lethality;
@@ -608,6 +572,16 @@ public class Record implements Serializable
 		this.lethality = lethality;
 	}
 
+	public double getLethalityLatest()
+	{
+		return lethalityLatest;
+	}
+
+	public void setLethalityLatest(double lethalityLatest)
+	{
+		this.lethalityLatest = lethalityLatest;
+	}
+
 	public double getLethalityDelta()
 	{
 		return lethalityDelta;
@@ -616,6 +590,26 @@ public class Record implements Serializable
 	public void setLethalityDelta(double lethalityDelta)
 	{
 		this.lethalityDelta = lethalityDelta;
+	}
+
+	public double getGrowth()
+	{
+		return growth;
+	}
+
+	public void setGrowth(double growth)
+	{
+		this.growth = growth;
+	}
+
+	public double getGrowthDelta()
+	{
+		return growthDelta;
+	}
+
+	public void setGrowthDelta(double growthDelta)
+	{
+		this.growthDelta = growthDelta;
 	}
 
 	public double getTestDensity()
@@ -636,26 +630,6 @@ public class Record implements Serializable
 	public void setTestDensityDelta(double testDensityDelta)
 	{
 		this.testDensityDelta = testDensityDelta;
-	}
-
-	public long getHypotheticalInfected()
-	{
-		return hypotheticalInfected;
-	}
-
-	public void setHypotheticalInfected(long hypotheticalInfected)
-	{
-		this.hypotheticalInfected = hypotheticalInfected;
-	}
-
-	public long getHypotheticalInfectedDelta()
-	{
-		return hypotheticalInfectedDelta;
-	}
-
-	public void setHypotheticalInfectedDelta(long hypotheticalInfectedDelta)
-	{
-		this.hypotheticalInfectedDelta = hypotheticalInfectedDelta;
 	}
 
 	public long getConfirmedDelta()
@@ -758,16 +732,6 @@ public class Record implements Serializable
 		this.hospitalizedDelta = hospitalizedDelta;
 	}
 
-	public long getWorkloadDelta()
-	{
-		return workloadDelta;
-	}
-
-	public void setWorkloadDelta(long workloadDelta)
-	{
-		this.workloadDelta = workloadDelta;
-	}
-
 	public double getConfirmedDeltaPercent()
 	{
 		return confirmedDeltaPercent;
@@ -866,16 +830,6 @@ public class Record implements Serializable
 	public void setHospitalizedDeltaPercent(double hospitalizedDeltaPercent)
 	{
 		this.hospitalizedDeltaPercent = hospitalizedDeltaPercent;
-	}
-
-	public double getWorkloadDeltaPercent()
-	{
-		return workloadDeltaPercent;
-	}
-
-	public void setWorkloadDeltaPercent(double workloadDeltaPercent)
-	{
-		this.workloadDeltaPercent = workloadDeltaPercent;
 	}
 
 	public double getConfirmedPopulationPercent()
@@ -978,123 +932,73 @@ public class Record implements Serializable
 		this.hospitalizedPopulationPercent = hospitalizedPopulationPercent;
 	}
 
-	public double getWorkloadPopulationPercent()
+	public long getConfirmedHypothetical()
 	{
-		return workloadPopulationPercent;
+		return confirmedHypothetical;
 	}
 
-	public void setWorkloadPopulationPercent(double workloadPopulationPercent)
+	public void setConfirmedHypothetical(long confirmedHypothetical)
 	{
-		this.workloadPopulationPercent = workloadPopulationPercent;
+		this.confirmedHypothetical = confirmedHypothetical;
 	}
 
-	public double getConfirmedDeltaPopulationPercent()
+	public long getDeceasedHypothetical()
 	{
-		return confirmedDeltaPopulationPercent;
+		return deceasedHypothetical;
 	}
 
-	public void setConfirmedDeltaPopulationPercent(double confirmedDeltaPopulationPercent)
+	public void setDeceasedHypothetical(long deceasedHypothetical)
 	{
-		this.confirmedDeltaPopulationPercent = confirmedDeltaPopulationPercent;
+		this.deceasedHypothetical = deceasedHypothetical;
 	}
 
-	public double getDeceasedDeltaPopulationPercent()
+	public long getRecoveredHypothetical()
 	{
-		return deceasedDeltaPopulationPercent;
+		return recoveredHypothetical;
 	}
 
-	public void setDeceasedDeltaPopulationPercent(double deceasedDeltaPopulationPercent)
+	public void setRecoveredHypothetical(long recoveredHypothetical)
 	{
-		this.deceasedDeltaPopulationPercent = deceasedDeltaPopulationPercent;
+		this.recoveredHypothetical = recoveredHypothetical;
 	}
 
-	public double getRecoveredDeltaPopulationPercent()
+	public long getActiveHypothetical()
 	{
-		return recoveredDeltaPopulationPercent;
+		return activeHypothetical;
 	}
 
-	public void setRecoveredDeltaPopulationPercent(double recoveredDeltaPopulationPercent)
+	public void setActiveHypothetical(long activeHypothetical)
 	{
-		this.recoveredDeltaPopulationPercent = recoveredDeltaPopulationPercent;
+		this.activeHypothetical = activeHypothetical;
 	}
 
-	public double getTestedDeltaPopulationPercent()
+	public long getClosedHypothetical()
 	{
-		return testedDeltaPopulationPercent;
+		return closedHypothetical;
 	}
 
-	public void setTestedDeltaPopulationPercent(double testedDeltaPopulationPercent)
+	public void setClosedHypothetical(long closedHypothetical)
 	{
-		this.testedDeltaPopulationPercent = testedDeltaPopulationPercent;
+		this.closedHypothetical = closedHypothetical;
 	}
 
-	public double getQuarantinedDeltaPopulationPercent()
+	public long getActiveHypoteticalZero()
 	{
-		return quarantinedDeltaPopulationPercent;
+		return activeHypoteticalZero;
 	}
 
-	public void setQuarantinedDeltaPopulationPercent(double quarantinedDeltaPopulationPercent)
+	public void setActiveHypoteticalZero(long activeHypoteticalZero)
 	{
-		this.quarantinedDeltaPopulationPercent = quarantinedDeltaPopulationPercent;
+		this.activeHypoteticalZero = activeHypoteticalZero;
 	}
 
-	public double getStandardCareDeltaPopulationPercent()
+	public long getConfirmedHypoteticalFull()
 	{
-		return standardCareDeltaPopulationPercent;
+		return confirmedHypoteticalFull;
 	}
 
-	public void setStandardCareDeltaPopulationPercent(double standardCareDeltaPopulationPercent)
+	public void setConfirmedHypoteticalFull(long confirmedHypoteticalFull)
 	{
-		this.standardCareDeltaPopulationPercent = standardCareDeltaPopulationPercent;
-	}
-
-	public double getIntensiveCareDeltaPopulationPercent()
-	{
-		return intensiveCareDeltaPopulationPercent;
-	}
-
-	public void setIntensiveCareDeltaPopulationPercent(double intensiveCareDeltaPopulationPercent)
-	{
-		this.intensiveCareDeltaPopulationPercent = intensiveCareDeltaPopulationPercent;
-	}
-
-	public double getActiveDeltaPopulationPercent()
-	{
-		return activeDeltaPopulationPercent;
-	}
-
-	public void setActiveDeltaPopulationPercent(double activeDeltaPopulationPercent)
-	{
-		this.activeDeltaPopulationPercent = activeDeltaPopulationPercent;
-	}
-
-	public double getClosedDeltaPopulationPercent()
-	{
-		return closedDeltaPopulationPercent;
-	}
-
-	public void setClosedDeltaPopulationPercent(double closedDeltaPopulationPercent)
-	{
-		this.closedDeltaPopulationPercent = closedDeltaPopulationPercent;
-	}
-
-	public double getHospitalizedDeltaPopulationPercent()
-	{
-		return hospitalizedDeltaPopulationPercent;
-	}
-
-	public void setHospitalizedDeltaPopulationPercent(double hospitalizedDeltaPopulationPercent)
-	{
-		this.hospitalizedDeltaPopulationPercent = hospitalizedDeltaPopulationPercent;
-	}
-
-	public double getWorkloadDeltaPopulationPercent()
-	{
-		return workloadDeltaPopulationPercent;
-	}
-
-	public void setWorkloadDeltaPopulationPercent(double workloadDeltaPopulationPercent)
-	{
-		this.workloadDeltaPopulationPercent = workloadDeltaPopulationPercent;
+		this.confirmedHypoteticalFull = confirmedHypoteticalFull;
 	}
 }

@@ -126,6 +126,10 @@ input[data-required='true']::placeholder,
 	vertical-align: middle;
 }
 
+.ui-tabs, .ui-tabs .ui-tabs-panels, .ui-tabs .ui-tabs-panel {
+	height: 100%;
+}
+
 
 
 
@@ -146,6 +150,10 @@ input[data-required='true']::placeholder,
 
 .app-right {
     text-align: right !important;
+}
+
+.app-no-padding {
+	padding: 0;
 }
 
 .app-no-border, 
@@ -250,3 +258,6 @@ td.jqplot-table-legend-label {
     text-align: center;
 }
 
+.app-tabs-main > .ui-tabs-panels > .ui-tabs-panel:nth-child(2) {
+	padding: 0;
+}

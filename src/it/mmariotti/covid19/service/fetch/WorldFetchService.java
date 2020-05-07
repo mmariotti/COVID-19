@@ -63,6 +63,11 @@ public class WorldFetchService extends FetchService
 	protected String[] extractRegionChain(CSVRecord line)
 	{
 		String combinedKey = get(line, "Combined_Key");
+		if("Italy".equals(combinedKey))
+		{
+			return null;
+		}
+
 		if(combinedKey == null)
 		{
 			String containerName = get(line, "Country/Region", "Country_Region");

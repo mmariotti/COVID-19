@@ -2,6 +2,8 @@ package it.mmariotti.covid19.controller;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -10,6 +12,8 @@ import java.util.Objects;
 import java.util.PropertyResourceBundle;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.function.IntToDoubleFunction;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.context.FacesContext;
@@ -34,6 +38,7 @@ import it.mmariotti.covid19.model.Region;
 import it.mmariotti.covid19.service.ApplicationService;
 import it.mmariotti.covid19.service.DataService;
 import it.mmariotti.covid19.service.ScheduleService;
+import one.util.streamex.EntryStream;
 import one.util.streamex.StreamEx;
 
 
@@ -67,9 +72,9 @@ public class DataController implements Serializable
 
 	private String property = "confirmed";
 
-	private Date minDate = ScheduleService.INITIAL_DATE;
+	private final Date minDate = ScheduleService.INITIAL_DATE;
 
-	private Date maxDate = new Date();
+	private final Date maxDate = DateUtils.truncate(new Date(), Calendar.DATE);
 
 	private Date startDate = minDate;
 
@@ -82,7 +87,7 @@ public class DataController implements Serializable
 		bundle = context.getApplication().evaluateExpressionGet(context, "#{bundle}", PropertyResourceBundle.class);
 
 		Map<String, List<Record>> latestSubRecordMap = applicationService.getLatestSubRecordMap();
-		Region world = applicationService.getLatestRecordMap().get("World").getRegion();
+		Region world = applicationService.getLatestRecordMap().get(Region.WORLD).getRegion();
 
 		rootNode = new DefaultTreeNode();
 		rootNode.setExpanded(true);
@@ -165,23 +170,29 @@ public class DataController implements Serializable
 		if(percent)
 		{
 			yAxis.setTickFormat("%.2f%%");
-			yAxis.setMin(0);
-			yAxis.setMax(100);
+//			yAxis.setMin(0);
+//			yAxis.setMax(100);
 		}
 		else
 		{
 			yAxis.setTickFormat("%'d");
 		}
 
+		SortedMap<Date, Double> selectedData = buildData(selectedNode, property, percent);
+		String selectedName = ((Region) selectedNode.getData()).getName();
+		addSeries(chart, selectedName, selectedData);
+
 		if(comparisonNode != null && !Objects.equals(selectedNode, comparisonNode))
 		{
-			ChartSeries comparisonSeries = buildSeries(comparisonNode, property, percent);
-			chart.addSeries(comparisonSeries);
+			SortedMap<Date, Double> comparisonData = buildData(comparisonNode, property, percent);
+			String comparisonName = ((Region) comparisonNode.getData()).getName();
+			addSeries(chart, comparisonName, comparisonData);
 		}
-
-		ChartSeries selectedSeries = buildSeries(selectedNode, property, percent);
-		chart.addSeries(selectedSeries);
-
+		else if(!percent)
+		{
+			SortedMap<Date, Double> trendData = computeTrend(selectedData);
+			addSeries(chart, "trend", trendData);
+		}
 
 		StreamEx.of(chart.getSeries())
 			.map(ChartSeries::getData)
@@ -194,34 +205,79 @@ public class DataController implements Serializable
 		return chart;
 	}
 
-	private ChartSeries buildSeries(TreeNode node, String property, boolean percent)
+	private static ChartSeries addSeries(CartesianChartModel chart, String title, SortedMap<Date, Double> data)
+	{
+		ChartSeries series = new LineChartSeries(title);
+
+		EntryStream.of(data)
+			.mapKeys(AXIS_DATE_FORMAT::format)
+			.forKeyValue(series::set);
+
+		chart.addSeries(series);
+
+		return series;
+	}
+
+
+	private SortedMap<Date, Double> buildData(TreeNode node, String property, boolean percent)
 	{
 		Region region = (Region) node.getData();
-
 		Set<Record> records = region.getRecords();
 
-//		NavigableMap<Date, Record> recordMap = StreamEx.of(records).toNavigableMap(Record::getRegistered, x -> x);
-//
-//		SortedMap<Object, Number> data = StreamEx.iterate(startDate, x -> !x.after(endDate), x -> DateUtils.addDays(x, 1))
-//			.mapToEntry(recordMap::floorEntry)
-//			.mapValues(x -> x == null ? null : x.getValue())
-//			.mapValues(r -> r == null ? 0 : Faces.<Number> resolveExpressionGet(r, property).doubleValue())
-//			.<Number> mapValues(x -> percent ? x * 100 : x)
-//			.<Object> mapKeys(AXIS_DATE_FORMAT::format)
-//			.toSortedMap();
-
-		SortedMap<Object, Number> data = StreamEx.of(records)
+		SortedMap<Date, Double> data = StreamEx.of(records)
 			.mapToEntry(Record::getRegistered, x -> x)
 			.removeKeys(x -> x.before(startDate) || x.after(endDate))
 			.mapValues(r -> Faces.<Number> resolveExpressionGet(r, property).doubleValue())
-			.<Number> mapValues(x -> percent ? x * 100 : x)
-			.<Object> mapKeys(AXIS_DATE_FORMAT::format)
+			.mapValues(x -> percent ? x * 100 : x)
 			.toSortedMap();
 
-		LineChartSeries series = new LineChartSeries(region.getName());
-		series.setData(data);
+		return data;
+	}
 
-		return series;
+	public SortedMap<Date, Double> computeTrend(SortedMap<Date, Double> data)
+	{
+		int n = data.size();
+
+		double[] x = StreamEx.ofKeys(data)
+			.mapToDouble(d -> Duration.ofMillis(d.getTime() - startDate.getTime()).toDays())
+			.toArray();
+
+		double[] y = StreamEx.ofValues(data)
+			.mapToDouble(Double::doubleValue)
+			.toArray();
+
+		double xySum = sum(n, i -> x[i] * y[i]);
+		double xSum = sum(n, i -> x[i]);
+		double ySum = sum(n, i -> y[i]);
+		double x2Sum = sum(n, i -> Math.pow(x[i], 2));
+
+		double alpha = (n * xySum - xSum * ySum) / (n * x2Sum - Math.pow(xSum, 2));
+		double beta = (ySum - alpha * xSum) / n;
+
+
+		SortedMap<Date, Double> trend = new TreeMap<>();
+		trend.put(startDate, beta);
+		trend.put(endDate, beta + (alpha * Duration.ofMillis(endDate.getTime() - startDate.getTime()).toDays()));
+
+//		int i = 0;
+//		for(Date d = startDate; !d.after(endDate); d = DateUtils.addDays(d, 1))
+//		{
+//			double v = alpha * i + beta;
+//			trend.put(d, v);
+//			i++;
+//		}
+
+		return trend;
+	}
+
+	private static double sum(int n, IntToDoubleFunction mapper)
+	{
+		double sum = 0;
+		for(int i = 0; i < n; i++)
+		{
+			sum += mapper.applyAsDouble(i);
+		}
+		return sum;
 	}
 
 	public void lastWeek()

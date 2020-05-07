@@ -13,6 +13,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -40,6 +41,7 @@ import it.mmariotti.covid19.model.RecordProperty;
 import it.mmariotti.covid19.model.Region;
 import it.mmariotti.covid19.model.Source;
 import it.mmariotti.covid19.util.Util;
+import one.util.streamex.StreamEx;
 
 
 public abstract class FetchService
@@ -142,6 +144,11 @@ public abstract class FetchService
 				source.setDigest(digest);
 			}
 
+			Map<RecordProperty, String> mapping = getMapping();
+			EnumSet<RecordProperty> unmappedProperties = StreamEx.of(RecordProperty.getMain())
+				.remove(mapping::containsKey)
+				.toCollection(() -> EnumSet.noneOf(RecordProperty.class));
+
 			Map<RecordId, Record> recordMap = new LinkedHashMap<>();
 
 			try(Reader reader = content.getReader())
@@ -153,8 +160,6 @@ public abstract class FetchService
 					.withIgnoreSurroundingSpaces()
 					.withFirstRecordAsHeader()
 					.parse(reader);
-
-				Map<RecordProperty, String> mapping = getMapping();
 
 				for(CSVRecord line : lines)
 				{
@@ -194,11 +199,25 @@ public abstract class FetchService
 
 			for(Record record : recordMap.values())
 			{
-				record.compute();
-
 				if(!em.contains(record))
 				{
+					Record previous = record.getPrevious();
+					for(RecordProperty property : unmappedProperties)
+					{
+						long value = property.get(previous);
+						if(value != 0)
+						{
+							property.set(record, value);
+						}
+					}
+
+					record.compute();
+
 					em.persist(record);
+				}
+				else
+				{
+					record.compute();
 				}
 			}
 
@@ -224,10 +243,10 @@ public abstract class FetchService
 			return null;
 		}
 
-		Region container = em.find(Region.class, "World");
+		Region container = em.find(Region.class, Region.WORLD);
 		if(container == null)
 		{
-			container = new Region("World");
+			container = new Region(Region.WORLD);
 			setPopulation(container);
 			em.persist(container);
 		}
