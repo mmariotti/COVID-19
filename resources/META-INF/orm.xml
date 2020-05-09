@@ -32,7 +32,7 @@
 			where x.id.registered = (
 				select max(x2.id.registered)
 				from Record x2
-				where x2.id.region = r
+				where x2.id.region = r and function('datediff', current_date(), x2.id.registered) < 7  
 			)
 			order by r.name
         ]]></query>

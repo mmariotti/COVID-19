@@ -311,6 +311,16 @@ public class Record implements Serializable
 		closed = deceased + recovered;
 		hospitalized = standardCare + intensiveCare;
 
+		if(tested != 0)
+		{
+			testDensity = (double) confirmed / tested;
+		}
+
+		if(closed != 0)
+		{
+			lethality = (double) deceased / closed;
+		}
+
 		long confirmed2 = previous.getConfirmed();
 		long deceased2 = previous.getDeceased();
 		long recovered2 = previous.getRecovered();
@@ -335,6 +345,20 @@ public class Record implements Serializable
 		activeDelta = active - active2;
 		closedDelta = closed - closed2;
 		hospitalizedDelta = hospitalized - hospitalized2;
+
+
+		if(closedDelta != 0)
+		{
+			growth = (double) confirmedDelta / closedDelta;
+			lethalityLatest = (double) deceasedDelta / closedDelta;
+		}
+
+		if(activeDelta < 0)
+		{
+			activeHypoteticalZero = (long) Math.ceil((double) -active / activeDelta);
+		}
+
+
 		lethalityDelta = lethality - lethality2;
 		growthDelta = growth - growth2;
 		testDensityDelta = testDensity - testDensity2;
@@ -349,27 +373,6 @@ public class Record implements Serializable
 		activeDeltaPercent = active2 != 0 ? (double) activeDelta / active2 : 0;
 		closedDeltaPercent = closed2 != 0 ? (double) closedDelta / closed2 : 0;
 		hospitalizedDeltaPercent = hospitalized2 != 0 ? (double) hospitalizedDelta / hospitalized2 : 0;
-
-		if(tested != 0)
-		{
-			testDensity = (double) confirmed / tested;
-		}
-
-		if(closed != 0)
-		{
-			lethality = (double) deceased / closed;
-		}
-
-		if(closedDelta != 0)
-		{
-			growth = (double) confirmedDelta / closedDelta;
-			lethalityLatest = (double) deceasedDelta / closedDelta;
-		}
-
-		if(activeDelta < 0)
-		{
-			activeHypoteticalZero = (long) Math.ceil((double) -active / activeDelta);
-		}
 
 		if(population != 0)
 		{

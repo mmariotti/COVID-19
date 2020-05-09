@@ -28,7 +28,107 @@
 
 		<p:tabView id="tabs" dynamic="true" styleClass="app-tabs-main">
 			<p:tab title="#{bundle.rankings}">
-				rankings
+				<div style="display: flex; justify-content: space-evenly;">
+					<p:panel header="#{bundle.lethality}">
+						<div style="display: flex; justify-content: space-evenly;">
+							<p:dataTable var="x" value="#{rankingController.lethality.target}" tableStyleClass="app-table-auto">
+								<p:column>#{x.region.name}</p:column>
+								<p:column>#{of:formatNumber(x.lethality, '0.00%')}</p:column>
+							</p:dataTable>
+							<p:dataTable var="x" value="#{rankingController.lethality.source}" tableStyleClass="app-table-auto">
+								<p:column>#{x.region.name}</p:column>
+								<p:column>#{of:formatNumber(x.lethality, '0.00%')}</p:column>
+							</p:dataTable>
+						</div>
+					</p:panel>
+					<p:panel header="#{bundle.growth}">
+						<div style="display: flex; justify-content: space-evenly;">
+							<p:dataTable var="x" value="#{rankingController.growth.target}" tableStyleClass="app-table-auto">
+								<p:column>#{x.region.name}</p:column>
+								<p:column>#{of:formatNumberDefault(x.growth)}</p:column>
+							</p:dataTable>
+							<p:dataTable var="x" value="#{rankingController.growth.source}" tableStyleClass="app-table-auto">
+								<p:column>#{x.region.name}</p:column>
+								<p:column>#{of:formatNumberDefault(x.growth)}</p:column>
+							</p:dataTable>
+						</div>
+					</p:panel>
+				</div>
+
+				<h:form>
+					<p:tabMenu activeIndex="#{rankingController.property.ordinal()}">
+						<c:forEach var="p" items="#{RecordProperty.values()}">
+							<p:menuitem action="#{rankingController.buildCustomModels}" process="@this" update="@form"
+								value="#{bundle[p.name()]}">
+								<f:setPropertyActionListener value="#{p}" target="#{rankingController.property}" />
+							</p:menuitem>
+						</c:forEach>
+					</p:tabMenu>
+
+
+					<div style="display: flex; justify-content: space-evenly;">
+						<p:panel header="#{bundle[rankingController.property.name()]}">
+							<div>
+								<p:dataTable var="x" value="#{rankingController.value.target}" tableStyleClass="app-table-auto">
+									<p:column>#{x.region.name}</p:column>
+									<p:column>#{of:formatNumberDefault(x[rankingController.property.name()])}</p:column>
+								</p:dataTable>
+								<p:dataTable var="x" value="#{rankingController.value.source}" tableStyleClass="app-table-auto">
+									<p:column>#{x.region.name}</p:column>
+									<p:column>#{of:formatNumberDefault(x[rankingController.property.name()])}</p:column>
+								</p:dataTable>
+							</div>
+						</p:panel>
+						<p:panel header="#{bundle[rankingController.property.name() += 'Delta']}">
+							<div>
+								<p:dataTable var="x" value="#{rankingController.delta.target}" tableStyleClass="app-table-auto">
+									<p:column>#{x.region.name}</p:column>
+									<p:column>#{of:formatNumberDefault(x[rankingController.property.name() += 'Delta'])}</p:column>
+								</p:dataTable>
+								<p:dataTable var="x" value="#{rankingController.delta.source}" tableStyleClass="app-table-auto">
+									<p:column>#{x.region.name}</p:column>
+									<p:column>#{of:formatNumberDefault(x[rankingController.property.name() += 'Delta'])}</p:column>
+								</p:dataTable>
+							</div>
+						</p:panel>
+						<p:panel header="#{bundle[rankingController.property.name() += 'DeltaPercent']}">
+							<div>
+								<p:dataTable var="x" value="#{rankingController.percent.target}" tableStyleClass="app-table-auto">
+									<p:column>#{x.region.name}</p:column>
+									<p:column>#{of:formatNumber(x[rankingController.property.name() += 'DeltaPercent'], '+0.00%;-0.00%')}</p:column>
+								</p:dataTable>
+								<p:dataTable var="x" value="#{rankingController.percent.source}" tableStyleClass="app-table-auto">
+									<p:column>#{x.region.name}</p:column>
+									<p:column>#{of:formatNumber(x[rankingController.property.name() += 'DeltaPercent'], '+0.00%;-0.00%')}</p:column>
+								</p:dataTable>
+							</div>
+						</p:panel>
+						<p:panel header="#{bundle[rankingController.property.name() += 'PopulationPercent']}">
+							<div>
+								<p:dataTable var="x" value="#{rankingController.population.target}" tableStyleClass="app-table-auto">
+									<p:column>#{x.region.name}</p:column>
+									<p:column>#{of:formatNumber(x[rankingController.property.name() += 'PopulationPercent'], '0.000%')}</p:column>
+								</p:dataTable>
+								<p:dataTable var="x" value="#{rankingController.population.source}" tableStyleClass="app-table-auto">
+									<p:column>#{x.region.name}</p:column>
+									<p:column>#{of:formatNumber(x[rankingController.property.name() += 'PopulationPercent'], '0.000%')}</p:column>
+								</p:dataTable>
+							</div>
+						</p:panel>
+						<p:panel header="#{bundle[rankingController.property.name() += 'Hypothetical']}">
+							<div>
+								<p:dataTable var="x" value="#{rankingController.hypothetical.target}" tableStyleClass="app-table-auto">
+									<p:column>#{x.region.name}</p:column>
+									<p:column>#{of:formatNumberDefault(x[rankingController.property.name() += 'Hypothetical'])}</p:column>
+								</p:dataTable>
+								<p:dataTable var="x" value="#{rankingController.hypothetical.source}" tableStyleClass="app-table-auto">
+									<p:column>#{x.region.name}</p:column>
+									<p:column>#{of:formatNumberDefault(x[rankingController.property.name() += 'Hypothetical'])}</p:column>
+								</p:dataTable>
+							</div>
+						</p:panel>
+					</div>
+				</h:form>
 			</p:tab>
 
 			<p:tab id="tabTree" title="#{bundle.tree}">
@@ -142,7 +242,8 @@
 
 									<tr>
 										<c:forEach var="p" items="#{RecordProperty.values()}">
-											<td style="text-align: right">#{of:formatNumber(record[p.name() += 'DeltaPercent'], '+#,##0.00%;-#,##0.00%')}</td>
+											<td style="text-align: right">#{of:formatNumber(record[p.name() += 'DeltaPercent'],
+												'+#,##0.00%;-#,##0.00%')}</td>
 										</c:forEach>
 									</tr>
 
