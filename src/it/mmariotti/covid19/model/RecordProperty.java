@@ -73,6 +73,19 @@ public enum RecordProperty
 		return MAIN;
 	}
 
+	public String[] getDerivedNames()
+	{
+		String name = name();
+
+		return new String[] {
+			name,
+			name + "Delta",
+			name + "DeltaPercent",
+			name + "PopulationPercent",
+			name + "Hypothetical"
+		};
+	}
+
 	public long get(Record record)
 	{
 		return record != null ? getter.applyAsLong(record) : 0;

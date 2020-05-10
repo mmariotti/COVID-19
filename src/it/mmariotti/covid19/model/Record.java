@@ -353,9 +353,9 @@ public class Record implements Serializable
 			lethalityLatest = (double) deceasedDelta / closedDelta;
 		}
 
-		if(activeDelta < 0)
+		if(active > 0 && activeDelta < 0)
 		{
-			activeHypoteticalZero = (long) Math.ceil((double) -active / activeDelta);
+			activeHypoteticalZero = (long) -Math.ceil((double) active / activeDelta);
 		}
 
 

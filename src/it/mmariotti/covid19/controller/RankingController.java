@@ -3,9 +3,9 @@ package it.mmariotti.covid19.controller;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -37,6 +37,7 @@ public class RankingController implements Serializable
 	private List<Record> records;
 
 	private DualListModel<Record> lethality;
+	private DualListModel<Record> lethalityLatest;
 	private DualListModel<Record> growth;
 	private DualListModel<Record> activeHypoteticalZero;
 	private DualListModel<Record> confirmedHypoteticalFull;
@@ -61,9 +62,10 @@ public class RankingController implements Serializable
 			.toList();
 
 		lethality = buildList(Record::getLethality, x -> x.getLethality() > 0 && x.getLethality() < 1);
+		lethalityLatest = buildList(Record::getLethalityLatest, x -> x.getLethalityLatest() > 0 && x.getLethalityLatest() < 1);
 		growth = buildList(Record::getGrowth, x -> x.getClosedDelta() > 0);
-		activeHypoteticalZero = buildList(Record::getGrowth, x -> x.getActiveDelta() < 0);
-		confirmedHypoteticalFull = buildList(Record::getGrowth, x -> x.getRegion().getPopulation() > 0 && x.getTested() > 0 && x.getConfirmedDelta() > 0);
+		activeHypoteticalZero = buildList(Record::getActiveHypoteticalZero, x -> x.getActiveHypoteticalZero() != 0);
+		confirmedHypoteticalFull = buildList(Record::getConfirmedHypoteticalFull, x -> x.getConfirmedHypoteticalFull() != 0);
 
 		buildCustomModels();
 	}
@@ -74,14 +76,75 @@ public class RankingController implements Serializable
 		delta = buildList(property::getDelta);
 		percent = buildList(property::getDeltaPercent);
 		population = buildList(property::getPopulationPercent, x -> x.getRegion().getPopulation() > 0);
-		hypothetical = buildList(property::getHypothetical, x -> x.getRegion().getPopulation() > 0);
+		hypothetical = buildList(property::getHypothetical, x -> property.getHypothetical(x) > 0);
+	}
+
+	public String[] getSuffixes()
+	{
+		if(EnumSet.of(RecordProperty.confirmed, RecordProperty.deceased, RecordProperty.recovered, RecordProperty.active, RecordProperty.closed).contains(property))
+		{
+			return new String[] {
+				"",
+				"Delta",
+				"DeltaPercent",
+				"PopulationPercent",
+				"Hypothetical"
+			};
+		}
+
+		return new String[] {
+			"",
+			"Delta",
+			"DeltaPercent",
+			"PopulationPercent"
+		};
+	}
+
+	public DualListModel<Record> getModel(String suffix)
+	{
+		switch(suffix)
+		{
+			case "Delta":
+				return delta;
+
+			case "DeltaPercent":
+				return percent;
+
+			case "PopulationPercent":
+				return population;
+
+			case "Hypothetical":
+				return hypothetical;
+
+			default:
+				return value;
+		}
+	}
+
+	public String getFormat(String suffix)
+	{
+		switch(suffix)
+		{
+			case "Delta":
+				return "+#,##0;-#,##0";
+
+			case "DeltaPercent":
+				return "+#,##0.00%;-#,##0.00%";
+
+			case "PopulationPercent":
+				return "0.000%";
+
+			case "Hypothetical":
+			default:
+				return "#,##0";
+		}
 	}
 
 	private <U extends Comparable<? super U>> DualListModel<Record> buildList(Function<? super Record, ? extends U> mapper, Predicate<? super Record> filter)
 	{
 		List<Record> list = StreamEx.of(records)
 			.filter(filter)
-			.sorted(Comparator.comparing(mapper))
+			.reverseSorted(Comparator.comparing(mapper))
 			.toList();
 
 		return buildDualListModel(list);
@@ -90,7 +153,7 @@ public class RankingController implements Serializable
 	private <U extends Comparable<? super U>> DualListModel<Record> buildList(Function<? super Record, ? extends U> mapper)
 	{
 		List<Record> list = StreamEx.of(records)
-			.sorted(Comparator.comparing(mapper))
+			.reverseSorted(Comparator.comparing(mapper))
 			.toList();
 
 		return buildDualListModel(list);
@@ -100,11 +163,10 @@ public class RankingController implements Serializable
 	{
 		int size = list.size();
 
-		List<Record> downList = list.subList(0, Math.min(size, LIMIT));
-		List<Record> upList = new ArrayList<>(list.subList(Math.max(size - LIMIT, 0), size));
-		Collections.reverse(upList);
+		List<Record> topList = list.subList(0, Math.min(size, LIMIT));
+		List<Record> bottomList = new ArrayList<>(list.subList(Math.max(size - LIMIT, 0), size));
 
-		return new DualListModel<>(downList, upList);
+		return new DualListModel<>(topList, bottomList);
 	}
 
 	public RecordProperty getProperty()
@@ -120,6 +182,11 @@ public class RankingController implements Serializable
 	public DualListModel<Record> getLethality()
 	{
 		return lethality;
+	}
+
+	public DualListModel<Record> getLethalityLatest()
+	{
+		return lethalityLatest;
 	}
 
 	public DualListModel<Record> getGrowth()
