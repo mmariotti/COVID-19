@@ -42,7 +42,7 @@ public class ItalyRegionFetchService extends FetchService
 		RecordProperty.quarantined, "isolamento_domiciliare",
 		RecordProperty.recovered, "dimessi_guariti",
 		RecordProperty.deceased, "deceduti",
-		RecordProperty.tested, "tamponi")
+		RecordProperty.tested, "casi_testati")
 		.toImmutableMap();
 
 	@Override
