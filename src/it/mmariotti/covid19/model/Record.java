@@ -59,8 +59,8 @@ public class Record implements Serializable
 	private double lethalityLatest;
 	private double testDensity;
 	private double growth;
-	private long activeHypoteticalZero;
-	private long confirmedHypoteticalFull;
+	private long activeHypotheticalZero;
+	private long confirmedHypotheticalFull;
 
 
 	/* delta */
@@ -355,7 +355,12 @@ public class Record implements Serializable
 
 		if(active > 0 && activeDelta < 0)
 		{
-			activeHypoteticalZero = (long) -Math.ceil((double) active / activeDelta);
+			activeHypotheticalZero = (long) -Math.ceil((double) active / activeDelta);
+		}
+
+		if(tested > 0 && confirmedDelta > 0)
+		{
+			confirmedHypotheticalFull = (long) Math.ceil((double) (tested - confirmed) / confirmedDelta);
 		}
 
 
@@ -395,14 +400,34 @@ public class Record implements Serializable
 				activeHypothetical = (population * active) / tested;
 				closedHypothetical = (population * closed) / tested;
 
-				if(confirmedDelta > 0)
-				{
-					confirmedHypoteticalFull = (long) ((population - confirmedHypothetical) / (population * confirmedDelta * testDensity));
-				}
 			}
-
 		}
 	}
+
+	public static void main(String[] args)
+	{
+		long population = 60_000_000L;
+		long confirmed = 100_000;
+		long tested = 500_000;
+		long confirmedDelta = 10_000;
+
+		double density = (double) confirmed / tested;
+		long confirmedHyp = (long) (population * density);
+		long negativeHyp = (long) (population * (1 - density));
+		long negativeHyp2 = population - confirmedHyp;
+
+		long confirmedHypDelta = (long) (population * (double) confirmedDelta / tested);
+		long confirmedHypDelta2 = (long) (confirmedHyp * (double) confirmedDelta / confirmed);
+
+		System.out.println("confirmedHyp: " + confirmedHyp);
+		System.out.println("negativeHyp: " + negativeHyp);
+		System.out.println("negativeHyp2: " + negativeHyp2);
+		System.out.println("confirmedHypDelta: " + confirmedHypDelta);
+		System.out.println("confirmedHypDelta2: " + confirmedHypDelta2);
+		System.out.println("confirmedHypFull: " + negativeHyp / confirmedHypDelta);
+		System.out.println("confirmedHypFull2: " + ((double) (tested - confirmed) / confirmedDelta));
+	}
+
 
 
 	public RecordId getId()
@@ -985,23 +1010,23 @@ public class Record implements Serializable
 		this.closedHypothetical = closedHypothetical;
 	}
 
-	public long getActiveHypoteticalZero()
+	public long getActiveHypotheticalZero()
 	{
-		return activeHypoteticalZero;
+		return activeHypotheticalZero;
 	}
 
-	public void setActiveHypoteticalZero(long activeHypoteticalZero)
+	public void setActiveHypotheticalZero(long activeHypotheticalZero)
 	{
-		this.activeHypoteticalZero = activeHypoteticalZero;
+		this.activeHypotheticalZero = activeHypotheticalZero;
 	}
 
-	public long getConfirmedHypoteticalFull()
+	public long getConfirmedHypotheticalFull()
 	{
-		return confirmedHypoteticalFull;
+		return confirmedHypotheticalFull;
 	}
 
-	public void setConfirmedHypoteticalFull(long confirmedHypoteticalFull)
+	public void setConfirmedHypotheticalFull(long confirmedHypotheticalFull)
 	{
-		this.confirmedHypoteticalFull = confirmedHypoteticalFull;
+		this.confirmedHypotheticalFull = confirmedHypotheticalFull;
 	}
 }

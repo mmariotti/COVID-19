@@ -5,11 +5,15 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NavigableMap;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.FlushModeType;
 import javax.persistence.PersistenceContext;
@@ -29,8 +33,11 @@ public class AggregatorService
 	private static final Comparator<String> WORLD_COMPARATOR = Comparator.comparing(Region.WORLD::equals);
 	private static final Comparator<Region> REGION_COMPARATOR = Comparator.comparing(Region::getName, SUBNAME_COMPARATOR.thenComparing(WORLD_COMPARATOR));
 
+	@Inject
+	private TestedService testedService;
+
 	@PersistenceContext
-	protected EntityManager em;
+	private EntityManager em;
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void compute(Set<Record> records)
@@ -39,7 +46,8 @@ public class AggregatorService
 
 		em.setFlushMode(FlushModeType.COMMIT);
 
-		Map<Date, List<Record>> grouping = StreamEx.of(records).groupingBy(Record::getRegistered);
+		NavigableMap<Date, List<Record>> grouping = StreamEx.of(records).groupingBy(Record::getRegistered, TreeMap::new, Collectors.toList());
+
 		for(Entry<Date, List<Record>> entry : grouping.entrySet())
 		{
 			compute(entry.getKey(), entry.getValue());
@@ -48,16 +56,17 @@ public class AggregatorService
 
 	private void compute(Date registered, List<Record> records)
 	{
+		Map<String, Long> testedMap = testedService.getTestedMap().get(registered);
+
 		Map<Region, Record> recordMap = StreamEx.of(records).toMap(x -> em.find(Region.class, x.getRegion().getName()), x -> x);
 
 		List<Region> regions = StreamEx.ofKeys(recordMap)
 			.flatMap(x -> StreamEx.iterate(x.getContainer(), Objects::nonNull, Region::getContainer))
 			.remove(recordMap::containsKey)
+			.removeBy(Region::getName, "Italy")
 			.distinct()
 			.sorted(REGION_COMPARATOR)
 			.toList();
-
-		System.currentTimeMillis();
 
 		for(Region region : regions)
 		{
@@ -71,6 +80,18 @@ public class AggregatorService
 				latestSubRecordList.replaceAll(x -> recordMap.getOrDefault(x.getRegion(), x));
 
 				aggregate.aggregate(latestSubRecordList);
+
+				if(testedMap != null)
+				{
+					String regionName = region.getName();
+					long tested = testedMap.getOrDefault(regionName, 0L);
+					if(tested != 0)
+					{
+						aggregate.setTested(tested);
+					}
+				}
+
+
 				aggregate.compute();
 
 				if(isNew)

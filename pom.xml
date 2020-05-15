@@ -226,6 +226,12 @@
 			<artifactId>commons-csv</artifactId>
 			<version>${commons-csv.version}</version>
 		</dependency>
+		
+		<dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>${jsoup.version}</version><!--$NO-MVN-MAN-VER$-->
+        </dependency>
 
 		<dependency>
 			<groupId>one.util</groupId>

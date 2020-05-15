@@ -160,14 +160,14 @@
 					<p:panelGrid>
 						<f:facet name="header">
 							<p:row>
-								<p:column colspan="2">#{bundle['activeHypoteticalZero']}</p:column>
+								<p:column colspan="2">#{bundle['activeHypotheticalZero']}</p:column>
 							</p:row>
 						</f:facet>
 
-						<c:forEach var="x" items="#{rankingController.activeHypoteticalZero.source}" varStatus="status">
+						<c:forEach var="x" items="#{rankingController.activeHypotheticalZero.source}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
 								<p:column>#{x.region.name}</p:column>
-								<p:column styleClass="app-right">#{of:formatNumberDefault(x['activeHypoteticalZero'])}</p:column>
+								<p:column styleClass="app-right">#{of:formatNumberDefault(x['activeHypotheticalZero'])}</p:column>
 							</p:row>
 						</c:forEach>
 
@@ -175,10 +175,10 @@
 							<p:column colspan="2" styleClass="app-center">...</p:column>
 						</p:row>
 
-						<c:forEach var="x" items="#{rankingController.activeHypoteticalZero.target}" varStatus="status">
+						<c:forEach var="x" items="#{rankingController.activeHypotheticalZero.target}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
 								<p:column>#{x.region.name}</p:column>
-								<p:column styleClass="app-right">#{of:formatNumberDefault(x['activeHypoteticalZero'])}</p:column>
+								<p:column styleClass="app-right">#{of:formatNumberDefault(x['activeHypotheticalZero'])}</p:column>
 							</p:row>
 						</c:forEach>
 					</p:panelGrid>
@@ -186,14 +186,14 @@
 					<p:panelGrid>
 						<f:facet name="header">
 							<p:row>
-								<p:column colspan="2">#{bundle['confirmedHypoteticalFull']}</p:column>
+								<p:column colspan="2">#{bundle['confirmedHypotheticalFull']}</p:column>
 							</p:row>
 						</f:facet>
 
-						<c:forEach var="x" items="#{rankingController.confirmedHypoteticalFull.source}" varStatus="status">
+						<c:forEach var="x" items="#{rankingController.confirmedHypotheticalFull.source}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
 								<p:column>#{x.region.name}</p:column>
-								<p:column styleClass="app-right">#{of:formatNumberDefault(x['confirmedHypoteticalFull'])}</p:column>
+								<p:column styleClass="app-right">#{of:formatNumberDefault(x['confirmedHypotheticalFull'])}</p:column>
 							</p:row>
 						</c:forEach>
 
@@ -201,10 +201,10 @@
 							<p:column colspan="2" styleClass="app-center">...</p:column>
 						</p:row>
 
-						<c:forEach var="x" items="#{rankingController.confirmedHypoteticalFull.target}" varStatus="status">
+						<c:forEach var="x" items="#{rankingController.confirmedHypotheticalFull.target}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
 								<p:column>#{x.region.name}</p:column>
-								<p:column styleClass="app-right">#{of:formatNumberDefault(x['confirmedHypoteticalFull'])}</p:column>
+								<p:column styleClass="app-right">#{of:formatNumberDefault(x['confirmedHypotheticalFull'])}</p:column>
 							</p:row>
 						</c:forEach>
 					</p:panelGrid>
@@ -280,13 +280,13 @@
 									</div>
 
 									<div>
-										<div>#{bundle.confirmedHypoteticalFull}</div>
-										<div>#{of:formatNumber(record.confirmedHypoteticalFull, '0')} #{bundle.days}</div>
+										<div>#{bundle.confirmedHypotheticalFull}</div>
+										<div>#{of:formatNumber(record.confirmedHypotheticalFull, '0')} #{bundle.days}</div>
 									</div>
 
 									<div>
-										<div>#{bundle.activeHypoteticalZero}</div>
-										<div>#{of:formatNumber(record.activeHypoteticalZero, '0')} #{bundle.days}</div>
+										<div>#{bundle.activeHypotheticalZero}</div>
+										<div>#{of:formatNumber(record.activeHypotheticalZero, '0')} #{bundle.days}</div>
 									</div>
 								</div>
 

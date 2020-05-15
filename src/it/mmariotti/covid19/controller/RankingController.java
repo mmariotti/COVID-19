@@ -39,8 +39,8 @@ public class RankingController implements Serializable
 	private DualListModel<Record> lethality;
 	private DualListModel<Record> lethalityLatest;
 	private DualListModel<Record> growth;
-	private DualListModel<Record> activeHypoteticalZero;
-	private DualListModel<Record> confirmedHypoteticalFull;
+	private DualListModel<Record> activeHypotheticalZero;
+	private DualListModel<Record> confirmedHypotheticalFull;
 
 	private RecordProperty property = RecordProperty.confirmed;
 	private DualListModel<Record> value;
@@ -64,8 +64,8 @@ public class RankingController implements Serializable
 		lethality = buildList(Record::getLethality, x -> x.getLethality() > 0 && x.getLethality() < 1);
 		lethalityLatest = buildList(Record::getLethalityLatest, x -> x.getLethalityLatest() > 0 && x.getLethalityLatest() < 1);
 		growth = buildList(Record::getGrowth, x -> x.getClosedDelta() > 0);
-		activeHypoteticalZero = buildList(Record::getActiveHypoteticalZero, x -> x.getActiveHypoteticalZero() != 0);
-		confirmedHypoteticalFull = buildList(Record::getConfirmedHypoteticalFull, x -> x.getConfirmedHypoteticalFull() != 0);
+		activeHypotheticalZero = buildList(Record::getActiveHypotheticalZero, x -> x.getActiveHypotheticalZero() != 0);
+		confirmedHypotheticalFull = buildList(Record::getConfirmedHypotheticalFull, x -> x.getConfirmedHypotheticalFull() != 0);
 
 		buildCustomModels();
 	}
@@ -73,8 +73,8 @@ public class RankingController implements Serializable
 	public void buildCustomModels()
 	{
 		value = buildList(property::get);
-		delta = buildList(property::getDelta);
-		percent = buildList(property::getDeltaPercent);
+		delta = buildList(property::getDelta, x -> property.get(x) != property.getDelta(x));
+		percent = buildList(property::getDeltaPercent, x -> property.get(x) != property.getDelta(x));
 		population = buildList(property::getPopulationPercent, x -> x.getRegion().getPopulation() > 0);
 		hypothetical = buildList(property::getHypothetical, x -> property.getHypothetical(x) > 0);
 	}
@@ -194,14 +194,14 @@ public class RankingController implements Serializable
 		return growth;
 	}
 
-	public DualListModel<Record> getActiveHypoteticalZero()
+	public DualListModel<Record> getActiveHypotheticalZero()
 	{
-		return activeHypoteticalZero;
+		return activeHypotheticalZero;
 	}
 
-	public DualListModel<Record> getConfirmedHypoteticalFull()
+	public DualListModel<Record> getConfirmedHypotheticalFull()
 	{
-		return confirmedHypoteticalFull;
+		return confirmedHypotheticalFull;
 	}
 
 	public DualListModel<Record> getValue()

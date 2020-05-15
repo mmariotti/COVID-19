@@ -24,6 +24,7 @@ import javax.ejb.AsyncResult;
 import javax.ejb.Asynchronous;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.FlushModeType;
 import javax.persistence.PersistenceContext;
@@ -51,6 +52,9 @@ public abstract class FetchService
 	private static final SimpleDateFormat LOG_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
 	private static final Properties POPULATION = Util.loadProperties("population");
+
+	@Inject
+	protected TestedService testedService;
 
 	@PersistenceContext
 	protected EntityManager em;
@@ -149,6 +153,8 @@ public abstract class FetchService
 				.remove(mapping::containsKey)
 				.toCollection(() -> EnumSet.noneOf(RecordProperty.class));
 
+			Map<Date, Map<String, Long>> testedMap = testedService.getTestedMap();
+
 			Map<RecordId, Record> recordMap = new LinkedHashMap<>();
 
 			try(Reader reader = content.getReader())
@@ -193,6 +199,20 @@ public abstract class FetchService
 
 						long value = getLong(line, header);
 						property.set(record, value);
+					}
+
+					if(!mapping.containsKey(RecordProperty.tested))
+					{
+						Map<String, Long> registeredTestedMap = testedMap.get(registered);
+						if(registeredTestedMap != null)
+						{
+							String regionName = region.getName();
+							long tested = registeredTestedMap.getOrDefault(regionName, 0L);
+							if(tested != 0)
+							{
+								record.setTested(tested);
+							}
+						}
 					}
 				}
 			}
