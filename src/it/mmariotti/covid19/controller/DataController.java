@@ -46,218 +46,220 @@ import one.util.streamex.StreamEx;
 @ViewScoped
 public class DataController implements Serializable
 {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private static final SimpleDateFormat AXIS_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    private static final SimpleDateFormat AXIS_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
-	@EJB
-	private ApplicationService applicationService;
+    @EJB
+    private ApplicationService applicationService;
 
-	@EJB
-	private DataService dataService;
+    @EJB
+    private DataService dataService;
 
-	private PropertyResourceBundle bundle;
+    private PropertyResourceBundle bundle;
 
-	private TreeNode rootNode;
+    private TreeNode rootNode;
 
-	private TreeNode comparisonNode;
+    private TreeNode comparisonNode;
 
-	private TreeNode selectedNode;
+    private TreeNode selectedNode;
 
-	private CartesianChartModel valueChart;
+    private CartesianChartModel valueChart;
 
-	private CartesianChartModel deltaChart;
+    private CartesianChartModel deltaChart;
 
-	private CartesianChartModel percentChart;
+    private CartesianChartModel percentChart;
 
-	private String property = "confirmed";
+    private String property = "confirmed";
 
-	private final Date minDate = ScheduleService.INITIAL_DATE;
+    private final Date minDate = ScheduleService.INITIAL_DATE;
 
-	private final Date maxDate = DateUtils.truncate(new Date(), Calendar.DATE);
+    private final Date maxDate = DateUtils.truncate(new Date(), Calendar.DATE);
 
-	private Date startDate = minDate;
+    private Date startDate = minDate;
 
-	private Date endDate = maxDate;
+    private Date endDate = maxDate;
 
-	@PostConstruct
-	public void init()
-	{
-		FacesContext context = FacesContext.getCurrentInstance();
-		bundle = context.getApplication().evaluateExpressionGet(context, "#{bundle}", PropertyResourceBundle.class);
+    @PostConstruct
+    public void init()
+    {
+        FacesContext context = FacesContext.getCurrentInstance();
+        bundle = context.getApplication().evaluateExpressionGet(context, "#{bundle}", PropertyResourceBundle.class);
 
-		Map<String, List<Record>> latestSubRecordMap = applicationService.getLatestSubRecordMap();
-		Region world = applicationService.getLatestRecordMap().get(Region.WORLD).getRegion();
+        Map<String, List<Record>> latestSubRecordMap = applicationService.getLatestSubRecordMap();
+        Region world = applicationService.getLatestRecordMap().get(Region.WORLD).getRegion();
 
-		rootNode = new DefaultTreeNode();
-		rootNode.setExpanded(true);
-		rootNode.setSelectable(false);
+        rootNode = new DefaultTreeNode();
+        rootNode.setExpanded(true);
+        rootNode.setSelectable(false);
 
-		selectedNode = new DefaultTreeNode(world, rootNode);
-		comparisonNode = selectedNode;
+        selectedNode = new DefaultTreeNode(world, rootNode);
+        comparisonNode = selectedNode;
 
-		StreamEx.ofTree(selectedNode, x -> StreamEx.of(x.getData())
-			.select(Region.class)
-			.map(Region::getName)
-			.flatCollection(latestSubRecordMap::get)
-			.map(Record::getRegion)
-			.map(y -> new DefaultTreeNode(y, x)))
-			.toList();
+        StreamEx.ofTree(selectedNode, x -> StreamEx.of(x.getData())
+            .select(Region.class)
+            .map(Region::getName)
+            .flatCollection(latestSubRecordMap::get)
+            .map(Record::getRegion)
+            .map(y -> new DefaultTreeNode(y, x)))
+            .toList();
 
-		selectedNode.setExpanded(true);
-		selectedNode.setSelected(true);
+        selectedNode.setExpanded(true);
+        selectedNode.setSelected(true);
 
-		buildCharts();
-	}
+        buildCharts();
+    }
 
-	public void onSelect(NodeSelectEvent event)
-	{
-		TreeNode node = event.getTreeNode();
-		if(node == null)
-		{
-			return;
-		}
+    public void onSelect(NodeSelectEvent event)
+    {
+        TreeNode node = event.getTreeNode();
+        if(node == null)
+        {
+            return;
+        }
 
-		if(selectedNode != null)
-		{
-			selectedNode.setSelected(false);
-		}
+        if(selectedNode != null)
+        {
+            selectedNode.setSelected(false);
+        }
 
-		node.setSelected(true);
+        node.setSelected(true);
 
-		StreamEx.iterate(node.getParent(), Objects::nonNull, TreeNode::getParent)
-			.nonNull()
-			.forEach(x -> x.setExpanded(true));
+        StreamEx.iterate(node.getParent(), Objects::nonNull, TreeNode::getParent)
+            .nonNull()
+            .forEach(x -> x.setExpanded(true));
 
-		selectedNode = node;
+        selectedNode = node;
 
-		buildCharts();
-	}
+        buildCharts();
+    }
 
-	public void buildCharts()
-	{
-		valueChart = buildChart(property, false);
-		deltaChart = buildChart(property + "Delta", false);
-		percentChart = buildChart(property + "DeltaPercent", true);
-	}
+    public void buildCharts()
+    {
+        valueChart = buildChart(property, false);
+        deltaChart = buildChart(property + "Delta", false);
+        percentChart = buildChart(property + "DeltaPercent", true);
+    }
 
-	public CartesianChartModel buildChart(String property, boolean percent)
-	{
-		CartesianChartModel chart = new LineChartModel();
-		chart.setLegendPosition("s");
-		chart.setLegendPlacement(LegendPlacement.OUTSIDEGRID);
-		chart.setLegendCols(2);
-		chart.setLegendRows(1);
-		chart.setMouseoverHighlight(true);
-		chart.setShowDatatip(true);
-		chart.setShowPointLabels(false);
+    public CartesianChartModel buildChart(String property, boolean percent)
+    {
+        CartesianChartModel chart = new LineChartModel();
+        chart.setLegendPosition("s");
+        chart.setLegendPlacement(LegendPlacement.OUTSIDEGRID);
+        chart.setLegendCols(2);
+        chart.setLegendRows(1);
+        chart.setMouseoverHighlight(true);
+        chart.setShowDatatip(true);
+        chart.setShowPointLabels(false);
 //		chartModel.setStacked(true);
-		chart.setZoom(true);
+        chart.setZoom(true);
 //		chart.setExtender("chartExtender");
 
-		Axis xAxis = new DateAxis();
-		chart.getAxes().put(AxisType.X, xAxis);
-		xAxis.setTickFormat("%b-%#d");
-		xAxis.setMin(AXIS_DATE_FORMAT.format(startDate));
-		xAxis.setMax(AXIS_DATE_FORMAT.format(endDate));
-		xAxis.setTickAngle(60);
-		xAxis.setTickCount(20);
+        Axis xAxis = new DateAxis();
+        chart.getAxes().put(AxisType.X, xAxis);
+        xAxis.setTickFormat("%b-%#d (%a)");
+        xAxis.setMin(AXIS_DATE_FORMAT.format(startDate));
+        xAxis.setMax(AXIS_DATE_FORMAT.format(endDate));
+        xAxis.setTickAngle(60);
+        xAxis.setTickCount(7);
 
-		Axis yAxis = new LinearAxis();
-		chart.getAxes().put(AxisType.Y, yAxis);
-		yAxis.setTickCount(11);
+        Axis yAxis = new LinearAxis();
+        chart.getAxes().put(AxisType.Y, yAxis);
+        yAxis.setTickCount(11);
 
-		if(percent)
-		{
-			yAxis.setTickFormat("%.2f%%");
+        if(percent)
+        {
+            yAxis.setTickFormat("%.2f%%");
 //			yAxis.setMin(0);
 //			yAxis.setMax(100);
-		}
-		else
-		{
-			yAxis.setTickFormat("%'d");
-		}
+        }
+        else
+        {
+            yAxis.setTickFormat("%'d");
+        }
 
-		SortedMap<Date, Double> selectedData = buildData(selectedNode, property, percent);
-		String selectedName = ((Region) selectedNode.getData()).getName();
-		addSeries(chart, selectedName, selectedData);
+        SortedMap<Date, Double> selectedData = buildData(selectedNode, property, percent);
+        String selectedName = ((Region) selectedNode.getData()).getName();
+        addSeries(chart, selectedName, selectedData);
 
-		if(comparisonNode != null && !Objects.equals(selectedNode, comparisonNode))
-		{
-			SortedMap<Date, Double> comparisonData = buildData(comparisonNode, property, percent);
-			String comparisonName = ((Region) comparisonNode.getData()).getName();
-			addSeries(chart, comparisonName, comparisonData);
-		}
-		else if(!percent)
-		{
-			SortedMap<Date, Double> trendData = computeTrend(selectedData);
-			addSeries(chart, "trend", trendData);
-		}
+        if(comparisonNode != null && !Objects.equals(selectedNode, comparisonNode))
+        {
+            SortedMap<Date, Double> comparisonData = buildData(comparisonNode, property, percent);
+            String comparisonName = ((Region) comparisonNode.getData()).getName();
+            addSeries(chart, comparisonName, comparisonData);
+        }
+        else if(!percent)
+        {
+            SortedMap<Date, Double> trendData = computeTrend(selectedData);
+            addSeries(chart, "trend", trendData);
+        }
 
-		StreamEx.of(chart.getSeries())
-			.map(ChartSeries::getData)
-			.remove(Map::isEmpty)
-			.map(x -> x.keySet().iterator().next())
-			.select(String.class)
-			.min(Comparator.naturalOrder())
-			.ifPresent(xAxis::setMin);
+        StreamEx.of(chart.getSeries())
+            .map(ChartSeries::getData)
+            .remove(Map::isEmpty)
+            .map(x -> x.keySet().iterator().next())
+            .select(String.class)
+            .min(Comparator.naturalOrder())
+            .ifPresent(xAxis::setMin);
 
-		return chart;
-	}
+        xAxis.setTickCount(Math.min(selectedData.size(), 31));
 
-	private static ChartSeries addSeries(CartesianChartModel chart, String title, SortedMap<Date, Double> data)
-	{
-		ChartSeries series = new LineChartSeries(title);
+        return chart;
+    }
 
-		EntryStream.of(data)
-			.mapKeys(AXIS_DATE_FORMAT::format)
-			.forKeyValue(series::set);
+    private static ChartSeries addSeries(CartesianChartModel chart, String title, SortedMap<Date, Double> data)
+    {
+        ChartSeries series = new LineChartSeries(title);
 
-		chart.addSeries(series);
+        EntryStream.of(data)
+            .mapKeys(AXIS_DATE_FORMAT::format)
+            .forKeyValue(series::set);
 
-		return series;
-	}
+        chart.addSeries(series);
 
-
-	private SortedMap<Date, Double> buildData(TreeNode node, String property, boolean percent)
-	{
-		Region region = (Region) node.getData();
-		Set<Record> records = region.getRecords();
-
-		SortedMap<Date, Double> data = StreamEx.of(records)
-			.mapToEntry(Record::getRegistered, x -> x)
-			.removeKeys(x -> x.before(startDate) || x.after(endDate))
-			.mapValues(r -> Faces.<Number> resolveExpressionGet(r, property).doubleValue())
-			.mapValues(x -> percent ? x * 100 : x)
-			.toSortedMap();
-
-		return data;
-	}
-
-	public SortedMap<Date, Double> computeTrend(SortedMap<Date, Double> data)
-	{
-		int n = data.size();
-
-		double[] x = StreamEx.ofKeys(data)
-			.mapToDouble(d -> Duration.ofMillis(d.getTime() - startDate.getTime()).toDays())
-			.toArray();
-
-		double[] y = StreamEx.ofValues(data)
-			.mapToDouble(Double::doubleValue)
-			.toArray();
-
-		double xySum = sum(n, i -> x[i] * y[i]);
-		double xSum = sum(n, i -> x[i]);
-		double ySum = sum(n, i -> y[i]);
-		double x2Sum = sum(n, i -> Math.pow(x[i], 2));
-
-		double alpha = (n * xySum - xSum * ySum) / (n * x2Sum - Math.pow(xSum, 2));
-		double beta = (ySum - alpha * xSum) / n;
+        return series;
+    }
 
 
-		SortedMap<Date, Double> trend = new TreeMap<>();
-		trend.put(startDate, beta);
-		trend.put(endDate, beta + (alpha * Duration.ofMillis(endDate.getTime() - startDate.getTime()).toDays()));
+    private SortedMap<Date, Double> buildData(TreeNode node, String property, boolean percent)
+    {
+        Region region = (Region) node.getData();
+        Set<Record> records = region.getRecords();
+
+        SortedMap<Date, Double> data = StreamEx.of(records)
+            .mapToEntry(Record::getRegistered, x -> x)
+            .removeKeys(x -> x.before(startDate) || x.after(endDate))
+            .mapValues(r -> Faces.<Number> resolveExpressionGet(r, property).doubleValue())
+            .mapValues(x -> percent ? x * 100 : x)
+            .toSortedMap();
+
+        return data;
+    }
+
+    public SortedMap<Date, Double> computeTrend(SortedMap<Date, Double> data)
+    {
+        int n = data.size();
+
+        double[] x = StreamEx.ofKeys(data)
+            .mapToDouble(d -> Duration.ofMillis(d.getTime() - startDate.getTime()).toDays())
+            .toArray();
+
+        double[] y = StreamEx.ofValues(data)
+            .mapToDouble(Double::doubleValue)
+            .toArray();
+
+        double xySum = sum(n, i -> x[i] * y[i]);
+        double xSum = sum(n, i -> x[i]);
+        double ySum = sum(n, i -> y[i]);
+        double x2Sum = sum(n, i -> Math.pow(x[i], 2));
+
+        double alpha = (n * xySum - xSum * ySum) / (n * x2Sum - Math.pow(xSum, 2));
+        double beta = (ySum - alpha * xSum) / n;
+
+
+        SortedMap<Date, Double> trend = new TreeMap<>();
+        trend.put(startDate, beta);
+        trend.put(endDate, beta + (alpha * Duration.ofMillis(endDate.getTime() - startDate.getTime()).toDays()));
 
 //		int i = 0;
 //		for(Date d = startDate; !d.after(endDate); d = DateUtils.addDays(d, 1))
@@ -267,117 +269,124 @@ public class DataController implements Serializable
 //			i++;
 //		}
 
-		return trend;
-	}
+        return trend;
+    }
 
-	private static double sum(int n, IntToDoubleFunction mapper)
-	{
-		double sum = 0;
-		for(int i = 0; i < n; i++)
-		{
-			sum += mapper.applyAsDouble(i);
-		}
-		return sum;
-	}
+    private static double sum(int n, IntToDoubleFunction mapper)
+    {
+        double sum = 0;
+        for(int i = 0; i < n; i++)
+        {
+            sum += mapper.applyAsDouble(i);
+        }
+        return sum;
+    }
 
-	public void lastWeek()
-	{
-		startDate = DateUtils.addDays(maxDate, -7);
-		endDate = maxDate;
-		buildCharts();
-	}
+    public void lastWeek()
+    {
+        startDate = DateUtils.addDays(maxDate, -7);
+        endDate = maxDate;
+        buildCharts();
+    }
 
-	public void lastMonth()
-	{
-		startDate = DateUtils.addDays(maxDate, -30);
-		endDate = maxDate;
-		buildCharts();
-	}
+    public void last2Weeks()
+    {
+        startDate = DateUtils.addDays(maxDate, -14);
+        endDate = maxDate;
+        buildCharts();
+    }
 
-	public void fullInterval()
-	{
-		startDate = minDate;
-		endDate = maxDate;
-		buildCharts();
-	}
+    public void lastMonth()
+    {
+        startDate = DateUtils.addDays(maxDate, -30);
+        endDate = maxDate;
+        buildCharts();
+    }
 
-	public TreeNode getRootNode()
-	{
-		return rootNode;
-	}
+    public void fullInterval()
+    {
+        startDate = minDate;
+        endDate = maxDate;
+        buildCharts();
+    }
 
-	public TreeNode getComparisonNode()
-	{
-		return comparisonNode;
-	}
+    public TreeNode getRootNode()
+    {
+        return rootNode;
+    }
 
-	public void setComparisonNode(TreeNode comparisonNode)
-	{
-		this.comparisonNode = comparisonNode;
-	}
+    public TreeNode getComparisonNode()
+    {
+        return comparisonNode;
+    }
 
-	public TreeNode getSelectedNode()
-	{
-		return selectedNode;
-	}
+    public void setComparisonNode(TreeNode comparisonNode)
+    {
+        this.comparisonNode = comparisonNode;
+    }
 
-	public void setSelectedNode(TreeNode selectedNode)
-	{
-		this.selectedNode = selectedNode;
-	}
+    public TreeNode getSelectedNode()
+    {
+        return selectedNode;
+    }
 
-	public String getProperty()
-	{
-		return property;
-	}
+    public void setSelectedNode(TreeNode selectedNode)
+    {
+        this.selectedNode = selectedNode;
+    }
 
-	public void setProperty(String property)
-	{
-		this.property = property;
-	}
+    public String getProperty()
+    {
+        return property;
+    }
 
-	public Date getStartDate()
-	{
-		return startDate;
-	}
+    public void setProperty(String property)
+    {
+        this.property = property;
+    }
 
-	public void setStartDate(Date startDate)
-	{
-		this.startDate = startDate;
-	}
+    public Date getStartDate()
+    {
+        return startDate;
+    }
 
-	public Date getEndDate()
-	{
-		return endDate;
-	}
+    public void setStartDate(Date startDate)
+    {
+        this.startDate = startDate;
+    }
 
-	public void setEndDate(Date endDate)
-	{
-		this.endDate = endDate;
-	}
+    public Date getEndDate()
+    {
+        return endDate;
+    }
 
-	public Date getMinDate()
-	{
-		return minDate;
-	}
+    public void setEndDate(Date endDate)
+    {
+        this.endDate = endDate;
+    }
 
-	public Date getMaxDate()
-	{
-		return maxDate;
-	}
+    public Date getMinDate()
+    {
+        return minDate;
+    }
 
-	public CartesianChartModel getValueChart()
-	{
-		return valueChart;
-	}
+    public Date getMaxDate()
+    {
+        return maxDate;
+    }
 
-	public CartesianChartModel getDeltaChart()
-	{
-		return deltaChart;
-	}
+    public CartesianChartModel getValueChart()
+    {
+        return valueChart;
+    }
 
-	public CartesianChartModel getPercentChart()
-	{
-		return percentChart;
-	}
+    public CartesianChartModel getDeltaChart()
+    {
+        return deltaChart;
+    }
+
+    public CartesianChartModel getPercentChart()
+    {
+        return percentChart;
+    }
 }

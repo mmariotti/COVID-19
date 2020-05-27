@@ -380,6 +380,8 @@
 										<div>
 											<p:commandButton action="#{bean.lastWeek}" process="chartPanel" update="chartPanel"
 												value="#{bundle.lastWeek}" />
+											<p:commandButton action="#{bean.last2Weeks}" process="chartPanel" update="chartPanel"
+												value="#{bundle.last2Weeks}" />
 											<p:commandButton action="#{bean.lastMonth}" process="chartPanel" update="chartPanel"
 												value="#{bundle.lastMonth}" />
 											<p:commandButton action="#{bean.fullInterval}" process="chartPanel" update="chartPanel"
@@ -406,13 +408,13 @@
 
 									<p:tabView dynamic="true">
 										<p:tab title="#{bundle[bean.property]}">
-											<p:chart rendered="#{bean.valueChart != null}" type="line" model="#{bean.valueChart}" responsive="true" />
+											<p:chart rendered="#{bean.valueChart != null}" type="line" model="#{bean.valueChart}" responsive="true" style="margin-right: 30px" />
 										</p:tab>
 										<p:tab title="#{bundle[bean.property += 'Delta']}">
-											<p:chart rendered="#{bean.deltaChart != null}" type="line" model="#{bean.deltaChart}" responsive="true" />
+											<p:chart rendered="#{bean.deltaChart != null}" type="line" model="#{bean.deltaChart}" responsive="true" style="margin-right: 30px" />
 										</p:tab>
 										<p:tab title="#{bundle[bean.property += 'DeltaPercent']}">
-											<p:chart rendered="#{bean.percentChart != null}" type="line" model="#{bean.percentChart}" responsive="true" />
+											<p:chart rendered="#{bean.percentChart != null}" type="line" model="#{bean.percentChart}" responsive="true" style="margin-right: 30px" />
 										</p:tab>
 									</p:tabView>
 								</p:outputPanel>
