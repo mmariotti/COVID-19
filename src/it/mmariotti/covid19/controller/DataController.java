@@ -204,7 +204,7 @@ public class DataController implements Serializable
             {
                 xAxis.setMin(min);
                 xAxis.setMax(max);
-                return null;
+                return "";
             }));
 
         StreamEx.of(chart.getSeries())
@@ -264,23 +264,15 @@ public class DataController implements Serializable
         double xySum = sum(n, i -> x[i] * y[i]);
         double xSum = sum(n, i -> x[i]);
         double ySum = sum(n, i -> y[i]);
-        double x2Sum = sum(n, i -> Math.pow(x[i], 2));
+        double x2Sum = sum(n, i -> x[i] * x[i]);
 
-        double alpha = (n * xySum - xSum * ySum) / (n * x2Sum - Math.pow(xSum, 2));
+        double alpha = (n * xySum - xSum * ySum) / (n * x2Sum - xSum * xSum);
         double beta = (ySum - alpha * xSum) / n;
 
 
         SortedMap<Date, Double> trend = new TreeMap<>();
         trend.put(s, beta);
         trend.put(f, beta + (alpha * Duration.ofMillis(f.getTime() - s.getTime()).toDays()));
-
-//		int i = 0;
-//		for(Date d = startDate; !d.after(endDate); d = DateUtils.addDays(d, 1))
-//		{
-//			double v = alpha * i + beta;
-//			trend.put(d, v);
-//			i++;
-//		}
 
         return trend;
     }
