@@ -277,6 +277,7 @@
 										<div>#{bundle.testDensity}</div>
 										<div>#{of:formatNumber(record.testDensity, '0.00%')}</div>
 										<div>#{of:formatNumber(record.testDensityDelta, '+0.00%;-0.00%')}</div>
+										<div>#{of:formatNumber(record.testedDelta > 0 ? record.confirmedDelta / record.testedDelta : 0, '0.00%')}</div>
 									</div>
 
 									<div>
