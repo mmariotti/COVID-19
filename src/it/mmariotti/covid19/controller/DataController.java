@@ -39,6 +39,7 @@ import it.mmariotti.covid19.service.ApplicationService;
 import it.mmariotti.covid19.service.DataService;
 import it.mmariotti.covid19.service.ScheduleService;
 import one.util.streamex.EntryStream;
+import one.util.streamex.MoreCollectors;
 import one.util.streamex.StreamEx;
 
 
@@ -161,7 +162,7 @@ public class DataController implements Serializable
         xAxis.setMin(AXIS_DATE_FORMAT.format(startDate));
         xAxis.setMax(AXIS_DATE_FORMAT.format(endDate));
         xAxis.setTickAngle(60);
-        xAxis.setTickCount(7);
+        xAxis.setTickCount(8);
 
         Axis yAxis = new LinearAxis();
         chart.getAxes().put(AxisType.Y, yAxis);
@@ -197,12 +198,22 @@ public class DataController implements Serializable
         StreamEx.of(chart.getSeries())
             .map(ChartSeries::getData)
             .remove(Map::isEmpty)
-            .map(x -> x.keySet().iterator().next())
+            .flatCollection(Map::keySet)
             .select(String.class)
-            .min(Comparator.naturalOrder())
-            .ifPresent(xAxis::setMin);
+            .collect(MoreCollectors.minMax(Comparator.naturalOrder(), (min, max) ->
+            {
+                xAxis.setMin(min);
+                xAxis.setMax(max);
+                return null;
+            }));
 
-        xAxis.setTickCount(Math.min(selectedData.size(), 31));
+        StreamEx.of(chart.getSeries())
+            .map(ChartSeries::getData)
+            .remove(Map::isEmpty)
+            .mapToInt(Map::size)
+            .map(x -> Math.min(x, 31))
+            .max()
+            .ifPresent(xAxis::setTickCount);
 
         return chart;
     }
@@ -236,12 +247,14 @@ public class DataController implements Serializable
         return data;
     }
 
-    public SortedMap<Date, Double> computeTrend(SortedMap<Date, Double> data)
+    public static SortedMap<Date, Double> computeTrend(SortedMap<Date, Double> data)
     {
         int n = data.size();
+        Date s = data.firstKey();
+        Date f = data.lastKey();
 
         double[] x = StreamEx.ofKeys(data)
-            .mapToDouble(d -> Duration.ofMillis(d.getTime() - startDate.getTime()).toDays())
+            .mapToDouble(d -> Duration.ofMillis(d.getTime() - s.getTime()).toDays())
             .toArray();
 
         double[] y = StreamEx.ofValues(data)
@@ -258,8 +271,8 @@ public class DataController implements Serializable
 
 
         SortedMap<Date, Double> trend = new TreeMap<>();
-        trend.put(startDate, beta);
-        trend.put(endDate, beta + (alpha * Duration.ofMillis(endDate.getTime() - startDate.getTime()).toDays()));
+        trend.put(s, beta);
+        trend.put(f, beta + (alpha * Duration.ofMillis(f.getTime() - s.getTime()).toDays()));
 
 //		int i = 0;
 //		for(Date d = startDate; !d.after(endDate); d = DateUtils.addDays(d, 1))
