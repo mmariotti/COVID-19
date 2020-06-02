@@ -95,7 +95,7 @@ public class DataController implements Serializable
         rootNode.setSelectable(false);
 
         selectedNode = new DefaultTreeNode(world, rootNode);
-        comparisonNode = selectedNode;
+//        comparisonNode = selectedNode;
 
         StreamEx.ofTree(selectedNode, x -> StreamEx.of(x.getData())
             .select(Region.class)
@@ -132,6 +132,18 @@ public class DataController implements Serializable
 
         selectedNode = node;
 
+        buildCharts();
+    }
+
+    public void selectComparisonNode()
+    {
+        comparisonNode = selectedNode;
+        buildCharts();
+    }
+
+    public void unselectComparisonNode()
+    {
+        comparisonNode = null;
         buildCharts();
     }
 

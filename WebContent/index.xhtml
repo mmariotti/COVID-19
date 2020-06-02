@@ -156,7 +156,7 @@
 							</p:row>
 						</c:forEach>
 					</p:panelGrid>
-					
+
 					<p:panelGrid>
 						<f:facet name="header">
 							<p:row>
@@ -182,7 +182,7 @@
 							</p:row>
 						</c:forEach>
 					</p:panelGrid>
-					
+
 					<p:panelGrid>
 						<f:facet name="header">
 							<p:row>
@@ -277,7 +277,8 @@
 										<div>#{bundle.testDensity}</div>
 										<div>#{of:formatNumber(record.testDensity, '0.00%')}</div>
 										<div>#{of:formatNumber(record.testDensityDelta, '+0.00%;-0.00%')}</div>
-										<div>#{of:formatNumber(record.testedDelta > 0 ? record.confirmedDelta / record.testedDelta : 0, '0.00%')}</div>
+										<div>#{of:formatNumber(record.testedDelta > 0 ? record.confirmedDelta / record.testedDelta : 0,
+											'0.00%')}</div>
 									</div>
 
 									<div>
@@ -399,23 +400,27 @@
 											<p:ajax event="dateSelect" listener="#{bean.buildCharts}" process="chartPanel" update="chartPanel" />
 										</p:calendar>
 
-										<p:commandButton action="#{bean.buildCharts}" value="#{bundle.comparisonNode}" process="chartPanel"
+										<p:splitButton action="#{bean.selectComparisonNode}" value="#{bundle.comparisonNode}" process="chartPanel"
 											update="chartPanel">
-											<f:setPropertyActionListener target="#{bean.comparisonNode}" value="#{bean.selectedNode}" />
-										</p:commandButton>
+											<p:menuitem action="#{bean.unselectComparisonNode}" process="chartPanel" update="chartPanel"
+												value="#{bundle.unset}" />
+										</p:splitButton>
 									</div>
 
 									<br />
 
 									<p:tabView dynamic="true">
 										<p:tab title="#{bundle[bean.property]}">
-											<p:chart rendered="#{bean.valueChart != null}" type="line" model="#{bean.valueChart}" responsive="true" style="margin-right: 30px" />
+											<p:chart rendered="#{bean.valueChart != null}" type="line" model="#{bean.valueChart}" responsive="true"
+												style="margin-right: 30px" />
 										</p:tab>
 										<p:tab title="#{bundle[bean.property += 'Delta']}">
-											<p:chart rendered="#{bean.deltaChart != null}" type="line" model="#{bean.deltaChart}" responsive="true" style="margin-right: 30px" />
+											<p:chart rendered="#{bean.deltaChart != null}" type="line" model="#{bean.deltaChart}" responsive="true"
+												style="margin-right: 30px" />
 										</p:tab>
 										<p:tab title="#{bundle[bean.property += 'DeltaPercent']}">
-											<p:chart rendered="#{bean.percentChart != null}" type="line" model="#{bean.percentChart}" responsive="true" style="margin-right: 30px" />
+											<p:chart rendered="#{bean.percentChart != null}" type="line" model="#{bean.percentChart}" responsive="true"
+												style="margin-right: 30px" />
 										</p:tab>
 									</p:tabView>
 								</p:outputPanel>
