@@ -149,14 +149,24 @@ public class DataController implements Serializable
 
     public void buildCharts()
     {
-        valueChart = buildChart(property, false);
-        deltaChart = buildChart(property + "Delta", false);
-        percentChart = buildChart(property + "DeltaPercent", true);
+        if("lethality".equals(property) || "testDensity".equals(property))
+        {
+            valueChart = buildChart(property, true);
+            deltaChart = buildChart(property + "Delta", true);
+            percentChart = buildChart(property + "Latest", true);
+        }
+        else
+        {
+            valueChart = buildChart(property, false);
+            deltaChart = buildChart(property + "Delta", false);
+            percentChart = buildChart(property + "DeltaPercent", true);
+        }
     }
 
     public CartesianChartModel buildChart(String property, boolean percent)
     {
         CartesianChartModel chart = new LineChartModel();
+        chart.setTitle(property);
         chart.setLegendPosition("s");
         chart.setLegendPlacement(LegendPlacement.OUTSIDEGRID);
         chart.setLegendCols(2);

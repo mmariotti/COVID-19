@@ -126,7 +126,9 @@ input[data-required='true']::placeholder,
 	vertical-align: middle;
 }
 
-.ui-tabs, .ui-tabs .ui-tabs-panels, .ui-tabs .ui-tabs-panel {
+.app-full-height.ui-tabs, 
+.app-full-height.ui-tabs .ui-tabs-panels, 
+.app-full-height.ui-tabs .ui-tabs-panel {
 	height: 100%;
 }
 
@@ -231,7 +233,6 @@ tbody > tr > td.app-table-frozen {
 
 th button.ui-button,
 td button.ui-button {
-	height: 16px;
 	vertical-align: middle;
 }
 

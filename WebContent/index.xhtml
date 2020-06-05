@@ -26,7 +26,7 @@
 
 		<o:importConstants type="it.mmariotti.covid19.model.RecordProperty" var="RecordProperty" />
 
-		<p:tabView id="tabs" dynamic="true" styleClass="app-tabs-main">
+		<p:tabView id="tabs" dynamic="true" styleClass="app-tabs-main app-full-height">
 			<p:tab title="#{bundle.rankings}">
 				<h:form>
 					<p:tabMenu activeIndex="#{rankingController.property.ordinal()}">
@@ -229,7 +229,7 @@
 						</p:layoutUnit>
 
 						<p:layoutUnit position="east" size="75%" minSize="150">
-							<p:outputPanel id="detail">
+							<p:outputPanel id="detail" style="height:100%; display: flex; flex-direction: column; justify-content: space-between">
 								<div class="section">
 									<div>
 										<div>#{bundle.region}</div>
@@ -259,26 +259,34 @@
 									</div>
 								</div>
 
-								<br />
 
 								<div class="section">
 									<div>
-										<div>#{bundle.lethality}</div>
+										<div>
+											<p:commandButton action="#{bean.buildCharts}" process="@this" update="chartPanel" value="#{bundle.lethality}">
+												<f:setPropertyActionListener value="lethality" target="#{bean.property}" />
+											</p:commandButton>
+										</div>
 										<div>#{of:formatNumber(record.lethality, '0.00%')}</div>
 										<div>#{of:formatNumber(record.lethalityDelta, '+0.00%;-0.00%')}</div>
 										<div>#{of:formatNumber(record.lethalityLatest, '0.00%')}</div>
 									</div>
+
+									<div>
+										<div>
+											<p:commandButton action="#{bean.buildCharts}" process="@this" update="chartPanel" value="#{bundle.testDensity}">
+												<f:setPropertyActionListener value="testDensity" target="#{bean.property}" />
+											</p:commandButton>
+										</div>
+										<div>#{of:formatNumber(record.testDensity, '0.00%')}</div>
+										<div>#{of:formatNumber(record.testDensityDelta, '+0.00%;-0.00%')}</div>
+										<div>#{of:formatNumber(record.testDensityLatest, '0.00%')}</div>
+									</div>
+									
 									<div>
 										<div>#{bundle.growth}</div>
 										<div>#{of:formatNumberDefault(record.growth)}</div>
-									</div>
-
-									<div>
-										<div>#{bundle.testDensity}</div>
-										<div>#{of:formatNumber(record.testDensity, '0.00%')}</div>
-										<div>#{of:formatNumber(record.testDensityDelta, '+0.00%;-0.00%')}</div>
-										<div>#{of:formatNumber(record.testedDelta > 0 ? record.confirmedDelta / record.testedDelta : 0,
-											'0.00%')}</div>
+										<div>#{of:formatNumberDefault(record.growthDelta)}</div>
 									</div>
 
 									<div>
@@ -292,90 +300,68 @@
 									</div>
 								</div>
 
-								<br />
-								<br />
+								<div>
+									<table width="100%">
+										<tr>
+											<c:forEach var="p" items="#{RecordProperty.values()}">
+												<th style="white-space: nowrap; text-align: right">
+													<!-- <p:radioButton for="property" itemIndex="#{p.ordinal()}" />
+													<p:outputLabel for="@previous" value="#{bundle[p]}" /> -->
+													
+													<p:commandButton action="#{bean.buildCharts}" process="@this" update="chartPanel" value="#{bundle[p]}">
+														<f:setPropertyActionListener value="#{p.name()}" target="#{bean.property}" />
+													</p:commandButton>
+												</th>
+											</c:forEach>
+										</tr>
+	
+										<tr>
+											<c:forEach var="p" items="#{RecordProperty.values()}">
+												<td style="text-align: right">#{of:formatNumberDefault(record[p.name()])}</td>
+											</c:forEach>
+										</tr>
+	
+										<tr>
+											<c:forEach var="p" items="#{RecordProperty.values()}">
+												<td style="text-align: right">#{of:formatNumber(record[p.name() += 'Delta'], '+#,##0;-#,##0')}</td>
+											</c:forEach>
+										</tr>
+	
+										<tr>
+											<c:forEach var="p" items="#{RecordProperty.values()}">
+												<td style="text-align: right">#{of:formatNumber(record[p.name() += 'DeltaPercent'], '+#,##0.00%;-#,##0.00%')}</td>
+											</c:forEach>
+										</tr>
+	
+										<tr>
+											<td style="text-align: right">#{of:formatNumber(record.confirmedPopulationPercent, '0.000%')}</td>
+											<td style="text-align: right">#{of:formatNumber(record.deceasedPopulationPercent, '0.000%')}</td>
+											<td style="text-align: right">#{of:formatNumber(record.recoveredPopulationPercent, '0.000%')}</td>
+											<td style="text-align: right"></td>
+											<td style="text-align: right"></td>
+											<td style="text-align: right"></td>
+											<td style="text-align: right"></td>
+											<td style="text-align: right">#{of:formatNumber(record.activePopulationPercent, '0.000%')}</td>
+											<td style="text-align: right">#{of:formatNumber(record.closedPopulationPercent, '0.000%')}</td>
+											<td style="text-align: right"></td>
+										</tr>
+										<tr>
+											<td style="text-align: right">#{of:formatNumberDefault(record.confirmedHypothetical)}</td>
+											<td style="text-align: right">#{of:formatNumberDefault(record.deceasedHypothetical)}</td>
+											<td style="text-align: right">#{of:formatNumberDefault(record.recoveredHypothetical)}</td>
+											<td style="text-align: right"></td>
+											<td style="text-align: right"></td>
+											<td style="text-align: right"></td>
+											<td style="text-align: right"></td>
+											<td style="text-align: right">#{of:formatNumberDefault(record.activeHypothetical)}</td>
+											<td style="text-align: right">#{of:formatNumberDefault(record.closedHypothetical)}</td>
+											<td style="text-align: right"></td>
+										</tr>
+									</table>
+								</div>
 
-								<p:selectOneRadio id="property" value="#{bean.property}" layout="custom">
-									<p:ajax listener="#{bean.buildCharts}" process="@this" update="chartPanel" />
-									<f:selectItems var="property" value="#{RecordProperty.values()}" itemValue="#{property.name()}" />
-								</p:selectOneRadio>
 
-								<table width="100%">
-									<tr>
-										<c:forEach var="p" items="#{RecordProperty.values()}">
-											<th style="white-space: nowrap; text-align: right">
-												<p:radioButton for="property" itemIndex="#{p.ordinal()}" />
-												<p:outputLabel for="@previous" value="#{bundle[p]}" />
-											</th>
-										</c:forEach>
-									</tr>
-
-									<tr>
-										<c:forEach var="p" items="#{RecordProperty.values()}">
-											<td style="text-align: right">#{of:formatNumberDefault(record[p.name()])}</td>
-										</c:forEach>
-									</tr>
-
-									<tr>
-										<c:forEach var="p" items="#{RecordProperty.values()}">
-											<td style="text-align: right">#{of:formatNumber(record[p.name() += 'Delta'], '+#,##0;-#,##0')}</td>
-										</c:forEach>
-									</tr>
-
-									<tr>
-										<c:forEach var="p" items="#{RecordProperty.values()}">
-											<td style="text-align: right">#{of:formatNumber(record[p.name() += 'DeltaPercent'],
-												'+#,##0.00%;-#,##0.00%')}</td>
-										</c:forEach>
-									</tr>
-
-									<tr>
-										<td style="text-align: right">#{of:formatNumber(record.confirmedPopulationPercent, '0.000%')}</td>
-										<td style="text-align: right">#{of:formatNumber(record.deceasedPopulationPercent, '0.000%')}</td>
-										<td style="text-align: right">#{of:formatNumber(record.recoveredPopulationPercent, '0.000%')}</td>
-										<td style="text-align: right"></td>
-										<td style="text-align: right"></td>
-										<td style="text-align: right"></td>
-										<td style="text-align: right"></td>
-										<td style="text-align: right">#{of:formatNumber(record.activePopulationPercent, '0.000%')}</td>
-										<td style="text-align: right">#{of:formatNumber(record.closedPopulationPercent, '0.000%')}</td>
-										<td style="text-align: right"></td>
-									</tr>
-									<tr>
-										<td style="text-align: right">#{of:formatNumberDefault(record.confirmedHypothetical)}</td>
-										<td style="text-align: right">#{of:formatNumberDefault(record.deceasedHypothetical)}</td>
-										<td style="text-align: right">#{of:formatNumberDefault(record.recoveredHypothetical)}</td>
-										<td style="text-align: right"></td>
-										<td style="text-align: right"></td>
-										<td style="text-align: right"></td>
-										<td style="text-align: right"></td>
-										<td style="text-align: right">#{of:formatNumberDefault(record.activeHypothetical)}</td>
-										<td style="text-align: right">#{of:formatNumberDefault(record.closedHypothetical)}</td>
-										<td style="text-align: right"></td>
-									</tr>
-								</table>
-
-								<!-- <br/>
-						
-						<p:dataTable var="record" value="#{region.records}" rows="10" paginator="true" paginatorPosition="bottom">
-							<p:column headerText="#{bundle.registered}">
-								#{record.registered}
-							</p:column>
-							<p:column headerText="#{bundle.confirmed}">
-								#{record.confirmed}
-							</p:column>
-							<p:column headerText="#{bundle.deceased}">
-								#{record.deceased}
-							</p:column>
-							<p:column headerText="#{bundle.recovered}">
-								#{record.recovered}
-							</p:column>
-						</p:dataTable> -->
-
-								<br />
-								<br />
-
-								<p:outputPanel id="chartPanel">
+								<p:outputPanel id="chartPanel" style="display:flex; flex-direction: column; justify-content: space-between;">
 									<div style="display: flex; justify-content: space-evenly;">
 										<label>#{bundle.interval}</label>
 
@@ -407,18 +393,16 @@
 										</p:splitButton>
 									</div>
 
-									<br />
-
 									<p:tabView dynamic="true">
-										<p:tab title="#{bundle[bean.property]}">
+										<p:tab title="#{bundle[bean.valueChart.title]}">
 											<p:chart rendered="#{bean.valueChart != null}" type="line" model="#{bean.valueChart}" responsive="true"
 												style="margin-right: 30px" />
 										</p:tab>
-										<p:tab title="#{bundle[bean.property += 'Delta']}">
+										<p:tab title="#{bundle[bean.deltaChart.title]}">
 											<p:chart rendered="#{bean.deltaChart != null}" type="line" model="#{bean.deltaChart}" responsive="true"
 												style="margin-right: 30px" />
 										</p:tab>
-										<p:tab title="#{bundle[bean.property += 'DeltaPercent']}">
+										<p:tab title="#{bundle[bean.percentChart.title]}">
 											<p:chart rendered="#{bean.percentChart != null}" type="line" model="#{bean.percentChart}" responsive="true"
 												style="margin-right: 30px" />
 										</p:tab>
