@@ -22,6 +22,7 @@ import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import it.mmariotti.covid19.util.Util;
+import one.util.streamex.IntStreamEx;
 
 
 @Singleton
@@ -29,95 +30,111 @@ import it.mmariotti.covid19.util.Util;
 @ExcludeDefaultInterceptors
 public class TestedService
 {
-	private static final Logger logger = LoggerFactory.getLogger(TestedService.class);
+    private static final Logger logger = LoggerFactory.getLogger(TestedService.class);
 
-	private static final Properties TRANSLATION = Util.loadProperties("translation");
+    private static final Properties TRANSLATION = Util.loadProperties("translation");
 
-	private Date fetched = new Date(0);
+    private Date fetched = new Date(0);
 
-	private Map<Date, Map<String, Long>> testedMap = new TreeMap<>();
-
-
-	public Map<Date, Map<String, Long>> getTestedMap()
-	{
-		if(TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - fetched.getTime()) > 50)
-		{
-			try
-			{
-				Map<Date, Map<String, Long>> map = fetchTested();
-				testedMap.putAll(map);
-			}
-			catch(Exception e)
-			{
-				logger.error("cannot fetch testedMap", e);
-			}
-
-			fetched = new Date();
-		}
-
-		return Collections.unmodifiableMap(testedMap);
-	}
+    private Map<Date, Map<String, Long>> testedMap = new TreeMap<>();
 
 
-	private static Map<Date, Map<String, Long>> fetchTested() throws Exception
-	{
-		Map<Date, Map<String, Long>> result = new HashMap<>();
+    public Map<Date, Map<String, Long>> getTestedMap()
+    {
+        if(TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - fetched.getTime()) > 50)
+        {
+            try
+            {
+                Map<Date, Map<String, Long>> map = fetchTested();
+                testedMap.putAll(map);
+            }
+            catch(Exception e)
+            {
+                logger.error("cannot fetch testedMap", e);
+            }
 
-		Document doc = Jsoup.connect("https://www.worldometers.info/coronavirus/").get();
+            fetched = new Date();
+        }
 
-		Elements todayRows = doc.select("#main_table_countries_today tbody tr");
-		Elements yesterdayRows = doc.select("#main_table_countries_yesterday tbody tr");
+        return Collections.unmodifiableMap(testedMap);
+    }
 
-		Map<String, Long> todayMap = fetchTested(todayRows);
-		Map<String, Long> yesterdayMap = fetchTested(yesterdayRows);
+    private static Map<Date, Map<String, Long>> fetchTested() throws Exception
+    {
+        Map<Date, Map<String, Long>> result = new HashMap<>();
 
-		Date today = DateUtils.truncate(new Date(), Calendar.DATE);
-		Date yesterday = DateUtils.addDays(today, -1);
-		result.put(today, todayMap);
-		result.put(yesterday, yesterdayMap);
+        Document doc = Jsoup.connect("https://www.worldometers.info/coronavirus/").get();
 
-		return result;
-	}
+        Map<String, Long> todayMap = fetchTested(doc, "#main_table_countries_today");
+        Map<String, Long> yesterdayMap = fetchTested(doc, "#main_table_countries_yesterday");
+        Map<String, Long> yesterday2Map = fetchTested(doc, "#main_table_countries_yesterday2");
 
-	private static Map<String, Long> fetchTested(Elements rows) throws Exception
-	{
-		Map<String, Long> result = new HashMap<>();
+        Date today = DateUtils.truncate(new Date(), Calendar.DATE);
+        result.put(today, todayMap);
 
-		for(Element row : rows)
-		{
-			Element nameElem = row.selectFirst("td a");
-			if(nameElem == null)
-			{
-				continue;
-			}
+        Date yesterday = DateUtils.addDays(today, -1);
+        result.put(yesterday, yesterdayMap);
 
-			String name = StringUtils.trimToNull(nameElem.text());
-			if(name == null)
-			{
-				continue;
-			}
+        Date yesterday2 = DateUtils.addDays(today, -2);
+        result.put(yesterday2, yesterday2Map);
 
-			name = TRANSLATION.getProperty(name, name);
-			if(StringUtils.isBlank(name))
-			{
-				continue;
-			}
+        return result;
+    }
 
-			Element testedElem = row.selectFirst("td:nth-child(12)");
-			if(testedElem == null)
-			{
-				continue;
-			}
+    private static Map<String, Long> fetchTested(Document doc, String selector) throws Exception
+    {
+        Map<String, Long> result = new HashMap<>();
 
-			long tested = NumberUtils.toLong(StringUtils.remove(testedElem.text(), ','));
-			if(tested == 0)
-			{
-				continue;
-			}
+        Elements th = doc.select(selector + " th");
 
-			result.put(name, tested);
-		}
+        int index = IntStreamEx.range(th.size())
+            .mapToEntry(i -> i + 1, i -> th.get(i).text())
+            .filterValues("total tests"::equalsIgnoreCase)
+            .keys()
+            .findAny()
+            .orElse(-1);
 
-		return result;
-	}
+        if(index == -1)
+        {
+            return result;
+        }
+
+        Elements rows = doc.select(selector + " tbody tr");
+        for(Element row : rows)
+        {
+            Element nameElem = row.selectFirst("td a");
+            if(nameElem == null)
+            {
+                continue;
+            }
+
+            String name = StringUtils.trimToNull(nameElem.text());
+            if(name == null)
+            {
+                continue;
+            }
+
+            name = TRANSLATION.getProperty(name, name);
+            if(StringUtils.isBlank(name))
+            {
+                continue;
+            }
+
+            Element testedElem = row.selectFirst("td:nth-child(" + index + ")");
+            if(testedElem == null)
+            {
+                continue;
+            }
+
+            long tested = NumberUtils.toLong(StringUtils.remove(testedElem.text(), ','));
+            if(tested == 0)
+            {
+                continue;
+            }
+
+            result.put(name, tested);
+        }
+
+        return result;
+    }
 }
