@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
@@ -13,6 +14,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Index;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+
 import one.util.streamex.StreamEx;
 
 
@@ -404,9 +406,15 @@ public class Record implements Serializable
                 recoveredHypothetical = (population * recovered) / tested;
                 activeHypothetical = (population * active) / tested;
                 closedHypothetical = (population * closed) / tested;
-
             }
         }
+    }
+
+    public boolean hasChanges()
+    {
+        return StreamEx.of(RecordProperty.getMain())
+            .mapToLong(x -> x.getDelta(this))
+            .anyMatch(x -> x != 0);
     }
 
     public static void main(String[] args)
