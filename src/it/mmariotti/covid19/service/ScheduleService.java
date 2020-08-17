@@ -15,6 +15,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.Future;
+
 import javax.ejb.Asynchronous;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
@@ -27,12 +28,15 @@ import javax.mail.Message;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.sun.mail.smtp.SMTPTransport;
+
 import it.mmariotti.covid19.model.Record;
 import one.util.streamex.StreamEx;
 
@@ -40,127 +44,131 @@ import one.util.streamex.StreamEx;
 @Singleton
 public class ScheduleService
 {
-	private static final Logger logger = LoggerFactory.getLogger(ScheduleService.class);
+    private static final Logger logger = LoggerFactory.getLogger(ScheduleService.class);
 
-	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
-	public static final Date INITIAL_DATE = new GregorianCalendar(2020, Calendar.JANUARY, 22).getTime();
+    public static final Date INITIAL_DATE = new GregorianCalendar(2020, Calendar.JANUARY, 22).getTime();
 
-	@Inject
-	@Any
-	private Instance<FetchService> fetchers;
+    @Inject
+    @Any
+    private Instance<FetchService> fetchers;
 
-	@Inject
-	private ApplicationService application;
+    @Inject
+    private ApplicationService application;
 
-	@Inject
-	private AggregatorService aggregator;
+    @Inject
+    private AggregatorService aggregator;
 
 
-	@Schedule(second = "40", minute = "40", hour = "*", persistent = false)
-	@TransactionAttribute(TransactionAttributeType.NEVER)
-	public void scheduledFetch()
-	{
-		executeFetch();
-	}
+    @Schedule(second = "40", minute = "40", hour = "*", persistent = false)
+    @TransactionAttribute(TransactionAttributeType.NEVER)
+    public void scheduledFetch()
+    {
+        executeFetch();
+    }
 
-	@Asynchronous
-	@TransactionAttribute(TransactionAttributeType.NEVER)
-	public void executeFetch()
-	{
-		Date date = INITIAL_DATE;
-		Date now = new Date();
+    @Asynchronous
+    @TransactionAttribute(TransactionAttributeType.NEVER)
+    public void executeFetch()
+    {
+        Date date = INITIAL_DATE;
+        Date now = new Date();
 
-		try
-		{
-			List<String> fetched = new ArrayList<>();
-			while(!now.before(date))
-			{
-				Date currentDate = date;
-				String formattedDate = DATE_FORMAT.format(date);
+        try
+        {
+            List<String> fetched = new ArrayList<>();
+            while(!now.before(date))
+            {
+                Date currentDate = date;
 
-				Map<FetchService, Future<DataContent>> contentMap = StreamEx.of(fetchers.iterator())
-					.mapToEntry(x -> x.loadDataContent(currentDate))
-					.nonNullValues()
-					.toMap();
+                Map<FetchService, Future<DataContent>> contentMap = StreamEx.of(fetchers.iterator())
+                    .mapToEntry(x -> x.loadDataContent(currentDate))
+                    .nonNullValues()
+                    .toMap();
 
-				Set<Record> records = new LinkedHashSet<>();
+                Set<Record> records = new LinkedHashSet<>();
 
-				for(Entry<FetchService, Future<DataContent>> entry : contentMap.entrySet())
-				{
-					FetchService fetcher = entry.getKey();
-					DataContent content = entry.getValue().get();
-					if(content == null)
-					{
-						continue;
-					}
+                for(Entry<FetchService, Future<DataContent>> entry : contentMap.entrySet())
+                {
+                    FetchService fetcher = entry.getKey();
+                    DataContent content = entry.getValue().get();
+                    if(content == null)
+                    {
+                        continue;
+                    }
 
-					Collection<Record> fetchedRecords = fetcher.fetch(content);
-					if(!fetchedRecords.isEmpty())
-					{
-						fetched.add(formattedDate + " - " + fetcher.getClass().getSimpleName());
-						records.addAll(fetchedRecords);
-					}
-				}
+                    Collection<Record> fetchedRecords = fetcher.fetch(content);
+                    if(!fetchedRecords.isEmpty())
+                    {
+                        String msg = String.format("%s - %s - %,d",
+                            DATE_FORMAT.format(date),
+                            fetcher.getLogger().getName(),
+                            fetchedRecords.size());
 
-				aggregator.compute(records);
+                        fetched.add(msg);
+                        records.addAll(fetchedRecords);
+                    }
+                }
 
-				date = DateUtils.addDays(date, 1);
-			}
+                aggregator.compute(records);
 
-			application.buildLatestRecordMap();
+                date = DateUtils.addDays(date, 1);
+            }
 
-			if(!fetched.isEmpty())
-			{
-				sendMail("UPDATE", StringUtils.join(fetched, "\r\n"));
-			}
-		}
-		catch(Exception e)
-		{
-			sendMail("ERROR", "date: " + date + "\r\n\r\n" + ExceptionUtils.getStackTrace(e));
-		}
-	}
+            application.buildLatestRecordMap();
 
-	private static void sendMail(String subject, String body)
-	{
-		try
-		{
-			Properties prop = new Properties();
-			try(InputStream in = new FileInputStream("c:\\shape\\covid19-mail.properties"))
-			{
-				prop.load(in);
-			}
+            if(!fetched.isEmpty())
+            {
+                sendMail("UPDATE", StringUtils.join(fetched, "\r\n"));
+            }
+        }
+        catch(Exception e)
+        {
+            sendMail("ERROR", "date: " + date + "\r\n\r\n" + ExceptionUtils.getStackTrace(e));
+        }
+    }
 
-			String username = prop.getProperty("mail.smtp.user");
-			String password = prop.getProperty("mail.smtp.pass");
-			String fromAddress = prop.getProperty("mail.smtp.from.address");
-			String fromPersonal = prop.getProperty("mail.smtp.from.personal");
-			String recipientsTo = prop.getProperty("mail.smtp.to");
+    private static void sendMail(String subject, String body)
+    {
+        try
+        {
+            Properties prop = new Properties();
+            try(InputStream in = new FileInputStream("c:\\shape\\covid19-mail.properties"))
+            {
+                prop.load(in);
+            }
 
-			Session session = Session.getInstance(prop, null);
-			Message msg = new MimeMessage(session);
-			msg.setFrom(new InternetAddress(fromAddress, fromPersonal));
-			msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipientsTo, false));
-			msg.setSubject(subject);
-			msg.setText("Shape COVID-19 data notification\r\n\r\nhttp://covid.shapeitalia.com\r\n\r\n" + body);
-			msg.setSentDate(new Date());
+            String username = prop.getProperty("mail.smtp.user");
+            String password = prop.getProperty("mail.smtp.pass");
+            String fromAddress = prop.getProperty("mail.smtp.from.address");
+            String fromPersonal = prop.getProperty("mail.smtp.from.personal");
+            String recipientsTo = prop.getProperty("mail.smtp.to");
 
-			SMTPTransport t = (SMTPTransport) session.getTransport("smtp");
-			t.connect(username, password);
-			try
-			{
-				t.sendMessage(msg, msg.getAllRecipients());
+            Session session = Session.getInstance(prop, null);
+            Message msg = new MimeMessage(session);
+            msg.setFrom(new InternetAddress(fromAddress, fromPersonal));
+            msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipientsTo, false));
+            msg.setSubject(subject);
+            msg.setText("Shape COVID-19 data notification\r\n\r\nhttp://covid.shapeitalia.com\r\n\r\n" + body);
+            msg.setSentDate(new Date());
 
-				logger.info("sendMail(): response: " + t.getLastServerResponse());
-			}
-			finally
-			{
-				t.close();
-			}
-		}
-		catch(Exception e)
-		{
-			logger.warn(e.getMessage(), e);
-		}
-	}
+            SMTPTransport t = (SMTPTransport) session.getTransport("smtp");
+            t.connect(username, password);
+            try
+            {
+                t.sendMessage(msg, msg.getAllRecipients());
+
+                logger.info("sendMail(): response: " + t.getLastServerResponse());
+            }
+            finally
+            {
+                t.close();
+            }
+        }
+        catch(Exception e)
+        {
+            logger.warn(e.getMessage(), e);
+        }
+    }
 }
