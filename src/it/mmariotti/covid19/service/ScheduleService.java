@@ -103,7 +103,7 @@ public class ScheduleService
                     {
                         String msg = String.format("%s - %s - %,d",
                             DATE_FORMAT.format(date),
-                            fetcher.getClass().getSimpleName(),
+                            fetcher.getClass().getSuperclass().getSimpleName(),
                             fetchedRecords.size());
 
                         fetched.add(msg);
