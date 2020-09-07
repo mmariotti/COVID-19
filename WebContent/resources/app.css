@@ -127,13 +127,23 @@ input[data-required='true']::placeholder,
 }
 
 .app-full-height.ui-tabs, 
-.app-full-height.ui-tabs .ui-tabs-panels, 
-.app-full-height.ui-tabs .ui-tabs-panel {
+.app-full-height.ui-tabs > .ui-tabs-panels, 
+.app-full-height.ui-tabs > .ui-tabs-panels > .ui-tabs-panel {
 	height: 100%;
 }
 
+.app-full-height.ui-tabs {
+	display: flex;
+    flex-direction: column;
+}
 
+.app-full-height.ui-tabs > .ui-tabs-panels {
+    overflow: hidden;
+}
 
+.app-full-height.ui-tabs > .ui-tabs-panels > .ui-tabs-panel {
+    overflow: auto;
+}
 
 
 

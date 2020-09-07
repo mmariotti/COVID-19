@@ -7,18 +7,21 @@ import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.PropertyResourceBundle;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.IntToDoubleFunction;
+
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.omnifaces.util.Faces;
 import org.primefaces.event.NodeSelectEvent;
@@ -33,6 +36,7 @@ import org.primefaces.model.chart.LegendPlacement;
 import org.primefaces.model.chart.LineChartModel;
 import org.primefaces.model.chart.LineChartSeries;
 import org.primefaces.model.chart.LinearAxis;
+
 import it.mmariotti.covid19.model.Record;
 import it.mmariotti.covid19.model.Region;
 import it.mmariotti.covid19.service.ApplicationService;
@@ -57,7 +61,7 @@ public class DataController implements Serializable
     @EJB
     private DataService dataService;
 
-    private PropertyResourceBundle bundle;
+//    private PropertyResourceBundle bundle;
 
     private TreeNode rootNode;
 
@@ -85,7 +89,7 @@ public class DataController implements Serializable
     public void init()
     {
         FacesContext context = FacesContext.getCurrentInstance();
-        bundle = context.getApplication().evaluateExpressionGet(context, "#{bundle}", PropertyResourceBundle.class);
+//        bundle = context.getApplication().evaluateExpressionGet(context, "#{bundle}", PropertyResourceBundle.class);
 
         Map<String, List<Record>> latestSubRecordMap = applicationService.getLatestSubRecordMap();
         Region world = applicationService.getLatestRecordMap().get(Region.WORLD).getRegion();
@@ -94,10 +98,10 @@ public class DataController implements Serializable
         rootNode.setExpanded(true);
         rootNode.setSelectable(false);
 
-        selectedNode = new DefaultTreeNode(world, rootNode);
+        TreeNode worldNode = new DefaultTreeNode(world, rootNode);
 //        comparisonNode = selectedNode;
 
-        StreamEx.ofTree(selectedNode, x -> StreamEx.of(x.getData())
+        List<TreeNode> nodes = StreamEx.ofTree(worldNode, x -> StreamEx.of(x.getData())
             .select(Region.class)
             .map(Region::getName)
             .flatCollection(latestSubRecordMap::get)
@@ -105,7 +109,30 @@ public class DataController implements Serializable
             .map(y -> new DefaultTreeNode(y, x)))
             .toList();
 
-        selectedNode.setExpanded(true);
+        worldNode.setExpanded(true);
+
+        Locale locale = context.getViewRoot().getLocale();
+        if(locale != null)
+        {
+            String country = locale.getDisplayCountry(Locale.ENGLISH);
+            if(StringUtils.isNotBlank(country))
+            {
+                selectedNode = StreamEx.of(nodes)
+                    .mapToEntry(TreeNode::getData)
+                    .selectValues(Region.class)
+                    .mapValues(Region::getName)
+                    .filterValues(country::equalsIgnoreCase)
+                    .keys()
+                    .findAny()
+                    .orElse(null);
+            }
+        }
+
+        if(selectedNode == null)
+        {
+            selectedNode = worldNode;
+        }
+
         selectedNode.setSelected(true);
 
         buildCharts();

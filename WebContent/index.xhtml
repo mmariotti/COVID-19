@@ -29,49 +29,49 @@
 		<p:tabView id="tabs" dynamic="true" styleClass="app-tabs-main app-full-height">
 			<p:tab title="#{bundle.rankings}">
 				<h:form>
-					<p:tabMenu activeIndex="#{rankingController.property.ordinal()}">
-						<c:forEach var="p" items="#{RecordProperty.values()}">
-							<p:menuitem action="#{rankingController.buildCustomModels}" process="@this" update="@form"
-								value="#{bundle[p.name()]}">
-								<f:setPropertyActionListener value="#{p}" target="#{rankingController.property}" />
-							</p:menuitem>
-						</c:forEach>
-					</p:tabMenu>
+					<div style="display: flex; flex-direction: column; height: 100%">
+						<p:tabMenu activeIndex="#{rankingController.property.ordinal()}">
+							<c:forEach var="p" items="#{RecordProperty.values()}">
+								<p:menuitem action="#{rankingController.buildCustomModels}" process="@this" update="@form"
+									value="#{bundle[p.name()]}">
+									<f:setPropertyActionListener value="#{p}" target="#{rankingController.property}" />
+								</p:menuitem>
+							</c:forEach>
+						</p:tabMenu>
 
-					<br />
+						<div style="display: flex; justify-content: space-evenly; overflow: auto; padding: 8px 0;">
+							<c:forEach var="suffix" items="#{rankingController.suffixes}">
+								<c:set var="name" value="#{rankingController.property.name() += suffix}" />
+								<c:set var="model" value="#{rankingController.getModel(suffix)}" />
+								<c:set var="format" value="#{rankingController.getFormat(suffix)}" />
 
-					<div style="display: flex; justify-content: space-evenly;">
-						<c:forEach var="suffix" items="#{rankingController.suffixes}">
-							<c:set var="name" value="#{rankingController.property.name() += suffix}" />
-							<c:set var="model" value="#{rankingController.getModel(suffix)}" />
-							<c:set var="format" value="#{rankingController.getFormat(suffix)}" />
+								<p:panelGrid>
+									<f:facet name="header">
+										<p:row>
+											<p:column colspan="2">#{bundle[name]}</p:column>
+										</p:row>
+									</f:facet>
 
-							<p:panelGrid>
-								<f:facet name="header">
-									<p:row>
-										<p:column colspan="2">#{bundle[name]}</p:column>
+									<c:forEach var="x" items="#{model.source}" varStatus="status">
+										<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
+											<p:column>#{x.region.name}</p:column>
+											<p:column styleClass="app-right">#{of:formatNumber(x[name], format)}</p:column>
+										</p:row>
+									</c:forEach>
+
+									<p:row styleClass="ui-widget-header">
+										<p:column colspan="2" styleClass="app-center">...</p:column>
 									</p:row>
-								</f:facet>
 
-								<c:forEach var="x" items="#{model.source}" varStatus="status">
-									<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
-										<p:column>#{x.region.name}</p:column>
-										<p:column styleClass="app-right">#{of:formatNumber(x[name], format)}</p:column>
-									</p:row>
-								</c:forEach>
-
-								<p:row styleClass="ui-widget-header">
-									<p:column colspan="2" styleClass="app-center">...</p:column>
-								</p:row>
-
-								<c:forEach var="x" items="#{model.target}" varStatus="status">
-									<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
-										<p:column>#{x.region.name}</p:column>
-										<p:column styleClass="app-right">#{of:formatNumber(x[name], format)}</p:column>
-									</p:row>
-								</c:forEach>
-							</p:panelGrid>
-						</c:forEach>
+									<c:forEach var="x" items="#{model.target}" varStatus="status">
+										<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
+											<p:column>#{x.region.name}</p:column>
+											<p:column styleClass="app-right">#{of:formatNumber(x[name], format)}</p:column>
+										</p:row>
+									</c:forEach>
+								</p:panelGrid>
+							</c:forEach>
+						</div>
 					</div>
 				</h:form>
 			</p:tab>
@@ -212,7 +212,7 @@
 			</p:tab>
 
 			<p:tab id="tabTree" title="#{bundle.tree}">
-				<h:form id="form" style="padding-bottom: 30px">
+				<h:form id="form">
 					<ui:param name="region" value="#{bean.selectedNode.data}" />
 					<ui:param name="record" value="#{region.latestRecord}" />
 
@@ -229,7 +229,8 @@
 						</p:layoutUnit>
 
 						<p:layoutUnit position="east" size="75%" minSize="150">
-							<p:outputPanel id="detail" style="height:100%; display: flex; flex-direction: column; justify-content: space-between">
+							<p:outputPanel id="detail"
+								style="height:100%; display: flex; flex-direction: column; justify-content: space-between; overflow: auto;">
 								<div class="section">
 									<div>
 										<div>#{bundle.region}</div>
@@ -274,7 +275,8 @@
 
 									<div>
 										<div>
-											<p:commandButton action="#{bean.buildCharts}" process="@this" update="chartPanel" value="#{bundle.testDensity}">
+											<p:commandButton action="#{bean.buildCharts}" process="@this" update="chartPanel"
+												value="#{bundle.testDensity}">
 												<f:setPropertyActionListener value="testDensity" target="#{bean.property}" />
 											</p:commandButton>
 										</div>
@@ -282,7 +284,7 @@
 										<div>#{of:formatNumber(record.testDensityDelta, '+0.00%;-0.00%')}</div>
 										<div>#{of:formatNumber(record.testDensityLatest, '0.00%')}</div>
 									</div>
-									
+
 									<div>
 										<div>#{bundle.growth}</div>
 										<div>#{of:formatNumberDefault(record.growth)}</div>
@@ -307,32 +309,33 @@
 												<th style="white-space: nowrap; text-align: right">
 													<!-- <p:radioButton for="property" itemIndex="#{p.ordinal()}" />
 													<p:outputLabel for="@previous" value="#{bundle[p]}" /> -->
-													
+
 													<p:commandButton action="#{bean.buildCharts}" process="@this" update="chartPanel" value="#{bundle[p]}">
 														<f:setPropertyActionListener value="#{p.name()}" target="#{bean.property}" />
 													</p:commandButton>
 												</th>
 											</c:forEach>
 										</tr>
-	
+
 										<tr>
 											<c:forEach var="p" items="#{RecordProperty.values()}">
 												<td style="text-align: right">#{of:formatNumberDefault(record[p.name()])}</td>
 											</c:forEach>
 										</tr>
-	
+
 										<tr>
 											<c:forEach var="p" items="#{RecordProperty.values()}">
 												<td style="text-align: right">#{of:formatNumber(record[p.name() += 'Delta'], '+#,##0;-#,##0')}</td>
 											</c:forEach>
 										</tr>
-	
+
 										<tr>
 											<c:forEach var="p" items="#{RecordProperty.values()}">
-												<td style="text-align: right">#{of:formatNumber(record[p.name() += 'DeltaPercent'], '+#,##0.00%;-#,##0.00%')}</td>
+												<td style="text-align: right">#{of:formatNumber(record[p.name() += 'DeltaPercent'],
+													'+#,##0.00%;-#,##0.00%')}</td>
 											</c:forEach>
 										</tr>
-	
+
 										<tr>
 											<td style="text-align: right">#{of:formatNumber(record.confirmedPopulationPercent, '0.000%')}</td>
 											<td style="text-align: right">#{of:formatNumber(record.deceasedPopulationPercent, '0.000%')}</td>
@@ -393,7 +396,7 @@
 										</p:splitButton>
 									</div>
 
-									<p:tabView dynamic="true">
+									<p:tabView dynamic="true" style="padding: 0 4px">
 										<p:tab title="#{bundle[bean.valueChart.title]}">
 											<p:chart rendered="#{bean.valueChart != null}" type="line" model="#{bean.valueChart}" responsive="true"
 												style="margin-right: 30px" />
