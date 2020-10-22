@@ -339,23 +339,23 @@ public class Record implements Serializable
         closedDelta = closed - closed2;
         hospitalizedDelta = hospitalized - hospitalized2;
 
-        if(closed != 0)
+        if(closed > 0)
         {
             lethality = (double) deceased / closed;
         }
 
-        if(closedDelta != 0)
+        if(closedDelta > 0)
         {
             growth = (double) confirmedDelta / closedDelta;
             lethalityLatest = (double) deceasedDelta / closedDelta;
         }
 
-        if(tested != 0)
+        if(tested > 0 && confirmed >= tested)
         {
             testDensity = (double) confirmed / tested;
         }
 
-        if(testedDelta != 0)
+        if(testedDelta > 0 && confirmedDelta >= testedDelta)
         {
             testDensityLatest = (double) confirmedDelta / testedDelta;
         }
@@ -365,7 +365,7 @@ public class Record implements Serializable
             activeHypotheticalZero = (long) -Math.ceil((double) active / activeDelta);
         }
 
-        if(tested > 0 && confirmedDelta > 0)
+        if(tested >= confirmed && confirmedDelta > 0)
         {
             confirmedHypotheticalFull = (long) Math.ceil((double) (tested - confirmed) / confirmedDelta);
         }
@@ -399,7 +399,7 @@ public class Record implements Serializable
             closedPopulationPercent = (double) closed / population;
             hospitalizedPopulationPercent = (double) hospitalized / population;
 
-            if(tested > 0)
+            if(tested > 0 && tested > confirmed)
             {
                 confirmedHypothetical = (population * confirmed) / tested;
                 deceasedHypothetical = (population * deceased) / tested;
