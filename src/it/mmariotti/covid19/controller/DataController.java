@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
@@ -29,7 +30,10 @@ import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 import org.primefaces.model.chart.Axis;
 import org.primefaces.model.chart.AxisType;
+import org.primefaces.model.chart.BarChartModel;
+import org.primefaces.model.chart.BarChartSeries;
 import org.primefaces.model.chart.CartesianChartModel;
+import org.primefaces.model.chart.CategoryAxis;
 import org.primefaces.model.chart.ChartSeries;
 import org.primefaces.model.chart.DateAxis;
 import org.primefaces.model.chart.LegendPlacement;
@@ -41,6 +45,7 @@ import it.mmariotti.covid19.model.Record;
 import it.mmariotti.covid19.model.Region;
 import it.mmariotti.covid19.service.ApplicationService;
 import it.mmariotti.covid19.service.DataService;
+import it.mmariotti.covid19.service.FetchService;
 import it.mmariotti.covid19.service.ScheduleService;
 import one.util.streamex.EntryStream;
 import one.util.streamex.MoreCollectors;
@@ -74,6 +79,10 @@ public class DataController implements Serializable
     private CartesianChartModel deltaChart;
 
     private CartesianChartModel percentChart;
+
+    private BarChartModel parentValueChart;
+    private BarChartModel parentDeltaChart;
+    private BarChartModel parentPercentChart;
 
     private String property = "confirmed";
 
@@ -188,6 +197,59 @@ public class DataController implements Serializable
             deltaChart = buildChart(property + "Delta", false);
             percentChart = buildChart(property + "DeltaPercent", true);
         }
+
+        parentValueChart = null;
+        parentDeltaChart = null;
+        parentPercentChart = null;
+
+        Region region = (Region) selectedNode.getData();
+        if(region != null && !Region.WORLD.equals(region.getName()) && !region.getSubRegions().isEmpty())
+        {
+            if("lethality".equals(property) || "testDensity".equals(property))
+            {
+                parentValueChart = buildParentChart(region, property, true);
+                parentDeltaChart = buildParentChart(region, property + "Delta", true);
+                parentPercentChart = buildParentChart(region, property + "Latest", true);
+            }
+            else
+            {
+                parentValueChart = buildParentChart(region, property, false);
+                parentDeltaChart = buildParentChart(region, property + "Delta", false);
+                parentPercentChart = buildParentChart(region, property + "DeltaPercent", true);
+            }
+        }
+    }
+
+    private static BarChartModel buildParentChart(Region region, String property, boolean percent)
+    {
+        BarChartModel chart = new BarChartModel();
+        chart.setMouseoverHighlight(true);
+        chart.setShowDatatip(true);
+        chart.setShowPointLabels(false);
+        chart.setZoom(true);
+
+        Axis xAxis = new CategoryAxis();
+        chart.getAxes().put(AxisType.X, xAxis);
+        xAxis.setTickAngle(60);
+
+        Axis yAxis = new LinearAxis();
+        chart.getAxes().put(AxisType.Y, yAxis);
+        yAxis.setTickFormat(percent ? "%.2f%%" : "%'d");
+
+        ChartSeries series = new BarChartSeries();
+
+        StreamEx.of(region.getSubRegions())
+            .mapToEntry(x -> StringUtils.substringAfterLast(x.getName(), FetchService.SEPARATOR), Region::getLatestRecord)
+            .mapValues(x -> Faces.resolveExpressionGet(x, property))
+            .selectValues(Number.class)
+            .mapValues(Number::doubleValue)
+            .chain(x -> percent ? x.mapValues(y -> y * 100) : x)
+            .reverseSorted(Comparator.comparingDouble(Entry::getValue))
+            .forKeyValue(series::set);
+
+        chart.addSeries(series);
+
+        return chart;
     }
 
     public CartesianChartModel buildChart(String property, boolean percent)
@@ -442,5 +504,20 @@ public class DataController implements Serializable
     public CartesianChartModel getPercentChart()
     {
         return percentChart;
+    }
+
+    public BarChartModel getParentValueChart()
+    {
+        return parentValueChart;
+    }
+
+    public BarChartModel getParentDeltaChart()
+    {
+        return parentDeltaChart;
+    }
+
+    public BarChartModel getParentPercentChart()
+    {
+        return parentPercentChart;
     }
 }

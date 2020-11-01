@@ -400,14 +400,23 @@
 										<p:tab title="#{bundle[bean.valueChart.title]}">
 											<p:chart rendered="#{bean.valueChart != null}" type="line" model="#{bean.valueChart}" responsive="true"
 												style="margin-right: 30px" />
+                                                
+                                            <p:chart rendered="#{bean.parentValueChart != null}" type="bar" model="#{bean.parentValueChart}" responsive="true"
+                                                style="margin-right: 30px" />
 										</p:tab>
 										<p:tab title="#{bundle[bean.deltaChart.title]}">
 											<p:chart rendered="#{bean.deltaChart != null}" type="line" model="#{bean.deltaChart}" responsive="true"
 												style="margin-right: 30px" />
+                                                
+                                            <p:chart rendered="#{bean.parentDeltaChart != null}" type="bar" model="#{bean.parentDeltaChart}" responsive="true"
+                                                style="margin-right: 30px" />
 										</p:tab>
 										<p:tab title="#{bundle[bean.percentChart.title]}">
 											<p:chart rendered="#{bean.percentChart != null}" type="line" model="#{bean.percentChart}" responsive="true"
 												style="margin-right: 30px" />
+                                                
+                                            <p:chart rendered="#{bean.parentPercentChart != null}" type="bar" model="#{bean.parentPercentChart}" responsive="true"
+                                                style="margin-right: 30px" />
 										</p:tab>
 									</p:tabView>
 								</p:outputPanel>

@@ -1,5 +1,6 @@
 package it.mmariotti.covid19.service;
 
+import java.io.IOException;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.HttpURLConnection;
@@ -137,122 +138,26 @@ public abstract class FetchService
             {
                 source = new Source();
                 source.setName(url.toString());
+
+                Collection<Record> records = fetchRecords(content);
+
                 source.setDigest(digest);
                 em.persist(source);
+
+                return records;
             }
-            else
+
+            if(digest.equals(source.getDigest()))
             {
-                if(digest.equals(source.getDigest()))
-                {
-                    getLogger().info("fetch() source already present");
-                    return Collections.emptySet();
-                }
-
-                source.setDigest(digest);
+                getLogger().info("fetch() source already present");
+                return Collections.emptySet();
             }
 
-            Map<RecordProperty, String> mapping = getMapping();
-            EnumSet<RecordProperty> unmappedProperties = StreamEx.of(RecordProperty.getMain())
-                .remove(mapping::containsKey)
-                .toCollection(() -> EnumSet.noneOf(RecordProperty.class));
+            Collection<Record> records = fetchRecords(content);
 
-            Map<Date, Map<String, Long>> testedMap = testedService.getTestedMap();
+            source.setDigest(digest);
 
-            Map<RecordId, Record> recordMap = new LinkedHashMap<>();
-
-            try(Reader reader = content.getReader())
-            {
-                Iterable<CSVRecord> lines = CSVFormat.DEFAULT
-                    .withTrim()
-                    .withIgnoreEmptyLines()
-                    .withIgnoreHeaderCase()
-                    .withIgnoreSurroundingSpaces()
-                    .withFirstRecordAsHeader()
-                    .parse(reader);
-
-                for(CSVRecord line : lines)
-                {
-                    Date registered = Optional.ofNullable(extractRegistered(line))
-                        .map(x -> DateUtils.truncate(x, Calendar.DATE))
-                        .orElse(null);
-
-                    if(registered == null)
-                    {
-                        continue;
-                    }
-
-                    Region region = buildRegion(line);
-                    if(region == null)
-                    {
-                        continue;
-                    }
-
-                    Record record = recordMap.computeIfAbsent(new RecordId(region, registered), x ->
-                    {
-                        Record r = Record.buildRecord(em, x);
-                        region.getRecords().add(r);
-                        return r;
-                    });
-
-
-                    for(Entry<RecordProperty, String> entry : mapping.entrySet())
-                    {
-                        RecordProperty property = entry.getKey();
-                        String header = entry.getValue();
-
-                        long value = getLong(line, header);
-                        property.set(record, value);
-                    }
-
-                    if(!mapping.containsKey(RecordProperty.tested))
-                    {
-                        Map<String, Long> registeredTestedMap = testedMap.get(registered);
-                        if(registeredTestedMap != null)
-                        {
-                            String regionName = region.getName();
-                            long tested = registeredTestedMap.getOrDefault(regionName, 0L);
-                            if(tested != 0)
-                            {
-                                record.setTested(tested);
-                            }
-                        }
-                    }
-                }
-            }
-
-            return StreamEx.ofValues(recordMap)
-                .map(record ->
-                {
-                    if(!em.contains(record))
-                    {
-                        Record previous = record.getPrevious();
-                        for(RecordProperty property : unmappedProperties)
-                        {
-                            long value = property.get(previous);
-                            if(value != 0)
-                            {
-                                property.set(record, value);
-                            }
-                        }
-
-                        record.compute();
-
-                        if(!record.hasChanges())
-                        {
-                            return null;
-                        }
-
-                        em.persist(record);
-                    }
-                    else
-                    {
-                        record.compute();
-                    }
-
-                    return record;
-                })
-                .nonNull()
-                .toList();
+            return records;
         }
         catch(RuntimeException e)
         {
@@ -262,6 +167,112 @@ public abstract class FetchService
         {
             throw new RuntimeException(e.getMessage(), e);
         }
+    }
+
+    private Collection<Record> fetchRecords(DataContent content) throws IOException
+    {
+        Map<RecordProperty, String> mapping = getMapping();
+        EnumSet<RecordProperty> unmappedProperties = StreamEx.of(RecordProperty.getMain())
+            .remove(mapping::containsKey)
+            .toCollection(() -> EnumSet.noneOf(RecordProperty.class));
+
+        Map<Date, Map<String, Long>> testedMap = testedService.getTestedMap();
+
+        Map<RecordId, Record> recordMap = new LinkedHashMap<>();
+
+        try(Reader reader = content.getReader())
+        {
+            Iterable<CSVRecord> lines = CSVFormat.DEFAULT
+                .withTrim()
+                .withIgnoreEmptyLines()
+                .withIgnoreHeaderCase()
+                .withIgnoreSurroundingSpaces()
+                .withFirstRecordAsHeader()
+                .parse(reader);
+
+            for(CSVRecord line : lines)
+            {
+                Date registered = Optional.ofNullable(extractRegistered(line))
+                    .map(x -> DateUtils.truncate(x, Calendar.DATE))
+                    .orElse(null);
+
+                if(registered == null)
+                {
+                    continue;
+                }
+
+                Region region = buildRegion(line);
+                if(region == null)
+                {
+                    continue;
+                }
+
+                Record record = recordMap.computeIfAbsent(new RecordId(region, registered), x ->
+                {
+                    Record r = Record.buildRecord(em, x);
+                    region.getRecords().add(r);
+                    return r;
+                });
+
+
+                for(Entry<RecordProperty, String> entry : mapping.entrySet())
+                {
+                    RecordProperty property = entry.getKey();
+                    String header = entry.getValue();
+
+                    long value = getLong(line, header);
+                    property.set(record, value);
+                }
+
+                if(!mapping.containsKey(RecordProperty.tested))
+                {
+                    Map<String, Long> registeredTestedMap = testedMap.get(registered);
+                    if(registeredTestedMap != null)
+                    {
+                        String regionName = region.getName();
+                        long tested = registeredTestedMap.getOrDefault(regionName, 0L);
+                        if(tested != 0)
+                        {
+                            record.setTested(tested);
+                        }
+                    }
+                }
+            }
+        }
+
+        return StreamEx.ofValues(recordMap)
+            .map(record ->
+            {
+                if(!em.contains(record))
+                {
+                    Record previous = record.getPrevious();
+                    for(RecordProperty property : unmappedProperties)
+                    {
+                        long value = property.get(previous);
+                        if(value != 0)
+                        {
+                            property.set(record, value);
+                        }
+                    }
+
+                    record.compute();
+
+                    if(!record.hasChanges())
+                    {
+                        return null;
+                    }
+
+                    em.persist(record);
+                }
+                else
+                {
+                    record.compute();
+                }
+
+                return record;
+            })
+            .nonNull()
+            .toList();
     }
 
 
