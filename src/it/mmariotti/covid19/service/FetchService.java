@@ -157,12 +157,14 @@ public abstract class FetchService
 
                 sourceMap.put(url.toString(), source);
 
+                getLogger().info("fetch() records: {}", records.size());
                 return records;
             }
 
             if(digest.equals(source.getDigest()))
             {
                 getLogger().info("fetch() source already present");
+                getLogger().info("fetch() records: 0");
                 return Collections.emptySet();
             }
 
@@ -173,6 +175,7 @@ public abstract class FetchService
             source.setDigest(digest);
             em.merge(source);
 
+            getLogger().info("fetch() records: {}", records.size());
             return records;
         }
         catch(RuntimeException e)

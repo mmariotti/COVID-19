@@ -33,6 +33,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DateUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,6 +93,9 @@ public class ScheduleService
             {
                 Date currentDate = date;
 
+                logger.info("begin computing {}", DATE_FORMAT.format(currentDate));
+                long millis = System.currentTimeMillis();
+
                 Map<FetchService, Future<DataContent>> contentMap = StreamEx.of(fetcherList)
                     .mapToEntry(x -> x.loadDataContent(currentDate))
                     .nonNullValues()
@@ -122,6 +126,8 @@ public class ScheduleService
                 }
 
                 aggregator.compute(records);
+
+                logger.info("end computing {} - {}", DATE_FORMAT.format(currentDate), DurationFormatUtils.formatDuration(System.currentTimeMillis() - millis, "d'd' H'h' m'm' s's' S'ms'"));
 
                 date = DateUtils.addDays(date, 1);
             }
