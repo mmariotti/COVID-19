@@ -28,6 +28,8 @@ public class ItalyRegionFetchService extends FetchService
 {
     private static final Logger logger = LoggerFactory.getLogger(ItalyRegionFetchService.class);
 
+    private static final int EXECUTION_ORDER = 200;
+
     private static final String URL_TEMPLATE = "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni-%s.csv";
 
     private static final DateFormat URL_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");
@@ -120,6 +122,12 @@ public class ItalyRegionFetchService extends FetchService
     protected Logger getLogger()
     {
         return logger;
+    }
+
+    @Override
+    public int getExecutionOrder()
+    {
+        return EXECUTION_ORDER;
     }
 
     @Override

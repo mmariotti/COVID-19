@@ -38,4 +38,11 @@
         ]]></query>
     </named-query>
 
+    <named-query name="sourceList">
+        <query><![CDATA[
+            select x
+            from Source x
+        ]]></query>
+    </named-query>
+
 </entity-mappings>

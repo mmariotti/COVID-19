@@ -22,6 +22,8 @@ public class UnitedStatesFetchService extends FetchService
 {
     private static final Logger logger = LoggerFactory.getLogger(UnitedStatesFetchService.class);
 
+    private static final int EXECUTION_ORDER = 400;
+
     private static final String URL_TEMPLATE = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports_us/%s.csv";
 
     private static final DateFormat URL_DATE_FORMAT = new SimpleDateFormat("MM-dd-yyyy");
@@ -78,6 +80,12 @@ public class UnitedStatesFetchService extends FetchService
     protected Logger getLogger()
     {
         return logger;
+    }
+
+    @Override
+    public int getExecutionOrder()
+    {
+        return EXECUTION_ORDER;
     }
 
     @Override

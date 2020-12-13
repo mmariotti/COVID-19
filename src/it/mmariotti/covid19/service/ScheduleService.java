@@ -8,6 +8,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -72,20 +73,29 @@ public class ScheduleService
     @TransactionAttribute(TransactionAttributeType.NEVER)
     public void executeFetch()
     {
+        logger.info("executeFetch() begin");
+
+        application.loadSourceMap();
+
         Date date = INITIAL_DATE;
         Date now = new Date();
+
+        List<FetchService> fetcherList = StreamEx.of(fetchers.iterator())
+            .sortedBy(FetchService::getExecutionOrder)
+            .toList();
 
         try
         {
             List<String> fetched = new ArrayList<>();
+
             while(!now.before(date))
             {
                 Date currentDate = date;
 
-                Map<FetchService, Future<DataContent>> contentMap = StreamEx.of(fetchers.iterator())
+                Map<FetchService, Future<DataContent>> contentMap = StreamEx.of(fetcherList)
                     .mapToEntry(x -> x.loadDataContent(currentDate))
                     .nonNullValues()
-                    .toMap();
+                    .toCustomMap(LinkedHashMap::new);
 
                 Set<Record> records = new LinkedHashSet<>();
 
@@ -126,6 +136,10 @@ public class ScheduleService
         catch(Exception e)
         {
             sendMail("ERROR", "date: " + date + "\r\n\r\n" + ExceptionUtils.getStackTrace(e));
+        }
+        finally
+        {
+            logger.info("executeFetch() end");
         }
     }
 

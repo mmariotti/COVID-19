@@ -58,12 +58,18 @@ public abstract class FetchService
     private static final Properties POPULATION = Util.loadProperties("population");
 
     @Inject
+    protected ApplicationService applicationService;
+
+    @Inject
     protected TestedService testedService;
 
     @PersistenceContext
     protected EntityManager em;
 
     protected abstract Logger getLogger();
+
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public abstract int getExecutionOrder();
 
     protected abstract String getUrlTemplate();
 
@@ -130,12 +136,17 @@ public abstract class FetchService
 
         try
         {
+            Map<String, Source> sourceMap = applicationService.getSourceMap();
+
             URL url = content.getUrl();
             String digest = content.getDigest();
 
-            Source source = em.find(Source.class, url.toString());
+//            Source source = em.find(Source.class, url.toString());
+            Source source = sourceMap.get(url.toString());
             if(source == null)
             {
+                getLogger().info("fetch() new source");
+
                 source = new Source();
                 source.setName(url.toString());
 
@@ -143,6 +154,8 @@ public abstract class FetchService
 
                 source.setDigest(digest);
                 em.persist(source);
+
+                sourceMap.put(url.toString(), source);
 
                 return records;
             }
@@ -153,9 +166,12 @@ public abstract class FetchService
                 return Collections.emptySet();
             }
 
+            getLogger().info("fetch() source updated");
+
             Collection<Record> records = fetchRecords(content);
 
             source.setDigest(digest);
+            em.merge(source);
 
             return records;
         }
