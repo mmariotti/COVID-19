@@ -35,6 +35,7 @@ public class WorldFetchService extends FetchService
     private static final DateFormat URL_DATE_FORMAT = new SimpleDateFormat("MM-dd-yyyy");
 
     private static final String[] DATE_PATTERNS = {
+        "yyyy-MM-dd HH:mm",
         "yyyy-MM-dd HH:mm:ss",
         "yyyy-MM-dd'T'HH:mm:ss",
         "M/d/yy HH:mm"
