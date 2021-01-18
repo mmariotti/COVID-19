@@ -140,14 +140,20 @@ public class Record implements Serializable
         this(new RecordId(region, registered));
     }
 
-    public static Record latestRecord(EntityManager em, Region region, Date registered)
+    public static List<Record> latestRecordList(EntityManager em, Region region, Date registered, int maxResults)
     {
-        List<Record> resultList = em.createNamedQuery("latestRecord", Record.class)
+        List<Record> resultList = em.createNamedQuery("latestRecordList", Record.class)
             .setParameter("region", region)
             .setParameter("registered", registered)
-            .setMaxResults(1)
+            .setMaxResults(maxResults)
             .getResultList();
 
+        return resultList;
+    }
+
+    public static Record latestRecord(EntityManager em, Region region, Date registered)
+    {
+        List<Record> resultList = latestRecordList(em, region, registered, 1);
         return resultList.isEmpty() ? null : resultList.get(0);
     }
 
@@ -161,9 +167,9 @@ public class Record implements Serializable
         return subRecords;
     }
 
-    public static List<Record> latestRecordList(EntityManager em)
+    public static List<Record> globalLatestRecordList(EntityManager em)
     {
-        List<Record> records = em.createNamedQuery("latestRecordList", Record.class)
+        List<Record> records = em.createNamedQuery("globalLatestRecordList", Record.class)
             .getResultList();
 
         return records;
@@ -174,12 +180,7 @@ public class Record implements Serializable
         Region region = recordId.getRegion();
         Date registered = recordId.getRegistered();
 
-        List<Record> resultList = em.createNamedQuery("latestRecord", Record.class)
-            .setParameter("region", region)
-            .setParameter("registered", registered)
-            .setMaxResults(2)
-            .getResultList();
-
+        List<Record> resultList = latestRecordList(em, region, registered, 2);
         Record previous = resultList.size() > 1 ? resultList.get(1) : new Record();
         Record latest = resultList.size() > 0 ? resultList.get(0) : new Record();
         latest.setPrevious(previous);

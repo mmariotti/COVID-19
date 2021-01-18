@@ -69,7 +69,7 @@ public class ApplicationService
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public void buildLatestRecordMap()
     {
-        List<Record> latestRecordList = Record.latestRecordList(em);
+        List<Record> latestRecordList = Record.globalLatestRecordList(em);
         latestRecordList.forEach(x -> x.getRegion().setLatestRecord(x));
 
         latestRecordMap = StreamEx.of(latestRecordList).toMap(x -> x.getRegion().getName(), x -> x);
