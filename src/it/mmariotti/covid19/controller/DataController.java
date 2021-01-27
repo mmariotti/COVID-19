@@ -27,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.omnifaces.util.Faces;
 import org.primefaces.component.tabview.TabView;
+import org.primefaces.context.RequestContext;
 import org.primefaces.event.NodeSelectEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
@@ -183,6 +184,8 @@ public class DataController implements Serializable
 
         TabView tabView = (TabView) FacesContext.getCurrentInstance().getViewRoot().findComponent("tabs");
         tabView.setActiveIndex(2);
+
+        RequestContext.getCurrentInstance().execute("$('.ui-treenode-selected')[0].scrollIntoView();");
     }
 
     private TreeNode findNode(Region region)
