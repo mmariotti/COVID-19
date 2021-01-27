@@ -14,6 +14,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.function.IntToDoubleFunction;
 
 import javax.annotation.PostConstruct;
@@ -126,14 +127,7 @@ public class DataController implements Serializable
             String country = locale.getDisplayCountry(Locale.ENGLISH);
             if(StringUtils.isNotBlank(country))
             {
-                selectedNode = StreamEx.of(nodes)
-                    .mapToEntry(TreeNode::getData)
-                    .selectValues(Region.class)
-                    .mapValues(Region::getName)
-                    .filterValues(country::equalsIgnoreCase)
-                    .keys()
-                    .findAny()
-                    .orElse(null);
+                selectedNode = findNode(country);
             }
         }
 
@@ -150,6 +144,11 @@ public class DataController implements Serializable
     public void onSelect(NodeSelectEvent event)
     {
         TreeNode node = event.getTreeNode();
+        changeSelection(node);
+    }
+
+    private void changeSelection(TreeNode node)
+    {
         if(node == null)
         {
             return;
@@ -169,6 +168,101 @@ public class DataController implements Serializable
         selectedNode = node;
 
         buildCharts();
+    }
+
+    public void select(Region region)
+    {
+        TreeNode node = findNode(region);
+        if(node == null)
+        {
+            return;
+        }
+
+        changeSelection(node);
+    }
+
+    private TreeNode findNode(Region region)
+    {
+        if(region == null)
+        {
+            return null;
+        }
+
+        return findNode(region.getName());
+    }
+
+    private TreeNode findNode(String name)
+    {
+        if(StringUtils.isBlank(name))
+        {
+            return null;
+        }
+
+        TreeNode worldNode = rootNode.getChildren().get(0);
+        if(Region.WORLD.equals(name))
+        {
+            return worldNode;
+        }
+
+        String[] split = name.split(FetchService.SEPARATOR);
+
+        return findNode(worldNode, split, 0);
+    }
+
+    private TreeNode findNode(TreeNode node, String[] split, int i)
+    {
+        if(node == null || split == null || split.length == 0)
+        {
+            return null;
+        }
+
+        if(i >= split.length)
+        {
+            return node;
+        }
+
+        List<TreeNode> nodes = node.getChildren();
+        int index = indexedBinarySearch(nodes, split[i], x ->
+        {
+            String name = ((Region) x.getData()).getName();
+            return StringUtils.defaultIfBlank(StringUtils.substringAfterLast(name, FetchService.SEPARATOR), name);
+        });
+
+        if(index < 0)
+        {
+            return node;
+        }
+
+        TreeNode curNode = nodes.get(index);
+
+        return findNode(curNode, split, i + 1);
+    }
+
+    private static <T, U extends Comparable<U>> int indexedBinarySearch(List<? extends T> list, U key, Function<? super T, ? extends U> mapper)
+    {
+        int low = 0;
+        int high = list.size() - 1;
+
+        while(low <= high)
+        {
+            int mid = (low + high) >>> 1;
+            U midVal = mapper.apply(list.get(mid));
+            int cmp = midVal.compareTo(key);
+
+            if(cmp < 0)
+            {
+                low = mid + 1;
+            }
+            else if(cmp > 0)
+            {
+                high = mid - 1;
+            }
+            else
+            {
+                return mid; // key found
+            }
+        }
+        return -(low + 1);  // key not found
     }
 
     public void selectComparisonNode()

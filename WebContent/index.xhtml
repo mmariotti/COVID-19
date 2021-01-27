@@ -54,8 +54,10 @@
 
 									<c:forEach var="x" items="#{model.source}" varStatus="status">
 										<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
-											<p:column>#{x.region.name}</p:column>
-											<p:column styleClass="app-right">#{of:formatNumber(x[name], format)}</p:column>
+											<p:column>
+                                                <p:commandLink action="#{bean.select(x.region)}" process="@this"
+                                                    update="@form" value="#{x.region.name}" />
+                                                <p:column styleClass="app-right">#{of:formatNumber(x[name], format)}</p:column>
 										</p:row>
 									</c:forEach>
 
@@ -65,8 +67,9 @@
 
 									<c:forEach var="x" items="#{model.target}" varStatus="status">
 										<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
-											<p:column>#{x.region.name}</p:column>
-											<p:column styleClass="app-right">#{of:formatNumber(x[name], format)}</p:column>
+                                            <p:commandLink action="#{bean.select(x.region)}" process="@this"
+                                                update="@form" value="#{x.region.name}" />
+                                            <p:column styleClass="app-right">#{of:formatNumber(x[name], format)}</p:column>
 										</p:row>
 									</c:forEach>
 								</p:panelGrid>
@@ -88,7 +91,7 @@
 
 						<c:forEach var="x" items="#{rankingController.lethality.source}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
-								<p:column>#{x.region.name}</p:column>
+								<p:commandLink action="#{bean.select(x.region)}" process="@this" update="@form" value="#{x.region.name}"/>
 								<p:column styleClass="app-right">#{of:formatNumber(x['lethality'], '0.00%')}</p:column>
 							</p:row>
 						</c:forEach>
@@ -99,8 +102,9 @@
 
 						<c:forEach var="x" items="#{rankingController.lethality.target}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
-								<p:column>#{x.region.name}</p:column>
-								<p:column styleClass="app-right">#{of:formatNumber(x['lethality'], '0.00%')}</p:column>
+                                <p:commandLink action="#{bean.select(x.region)}" process="@this" update="@form"
+                                    value="#{x.region.name}" />
+                                <p:column styleClass="app-right">#{of:formatNumber(x['lethality'], '0.00%')}</p:column>
 							</p:row>
 						</c:forEach>
 					</p:panelGrid>
@@ -114,8 +118,9 @@
 
 						<c:forEach var="x" items="#{rankingController.lethalityLatest.source}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
-								<p:column>#{x.region.name}</p:column>
-								<p:column styleClass="app-right">#{of:formatNumber(x['lethalityLatest'], '0.00%')}</p:column>
+                                <p:commandLink action="#{bean.select(x.region)}" process="@this" update="@form"
+                                    value="#{x.region.name}" />
+                                <p:column styleClass="app-right">#{of:formatNumber(x['lethalityLatest'], '0.00%')}</p:column>
 							</p:row>
 						</c:forEach>
 
@@ -125,8 +130,9 @@
 
 						<c:forEach var="x" items="#{rankingController.lethalityLatest.target}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
-								<p:column>#{x.region.name}</p:column>
-								<p:column styleClass="app-right">#{of:formatNumber(x['lethalityLatest'], '0.00%')}</p:column>
+                                <p:commandLink action="#{bean.select(x.region)}" process="@this" update="@form"
+                                    value="#{x.region.name}" />
+                                <p:column styleClass="app-right">#{of:formatNumber(x['lethalityLatest'], '0.00%')}</p:column>
 							</p:row>
 						</c:forEach>
 					</p:panelGrid>
@@ -140,8 +146,9 @@
 
 						<c:forEach var="x" items="#{rankingController.growth.source}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
-								<p:column>#{x.region.name}</p:column>
-								<p:column styleClass="app-right">#{of:formatNumber(x['growth'], '0.000')}</p:column>
+                                <p:commandLink action="#{bean.select(x.region)}" process="@this" update="@form"
+                                    value="#{x.region.name}" />
+                                <p:column styleClass="app-right">#{of:formatNumber(x['growth'], '0.000')}</p:column>
 							</p:row>
 						</c:forEach>
 
@@ -151,8 +158,9 @@
 
 						<c:forEach var="x" items="#{rankingController.growth.target}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
-								<p:column>#{x.region.name}</p:column>
-								<p:column styleClass="app-right">#{of:formatNumber(x['growth'], '0.000')}</p:column>
+                                <p:commandLink action="#{bean.select(x.region)}" process="@this" update="@form"
+                                    value="#{x.region.name}" />
+                                <p:column styleClass="app-right">#{of:formatNumber(x['growth'], '0.000')}</p:column>
 							</p:row>
 						</c:forEach>
 					</p:panelGrid>
@@ -166,8 +174,9 @@
 
 						<c:forEach var="x" items="#{rankingController.activeHypotheticalZero.source}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
-								<p:column>#{x.region.name}</p:column>
-								<p:column styleClass="app-right">#{of:formatNumberDefault(x['activeHypotheticalZero'])}</p:column>
+                                <p:commandLink action="#{bean.select(x.region)}" process="@this" update="@form"
+                                    value="#{x.region.name}" />
+                                <p:column styleClass="app-right">#{of:formatNumberDefault(x['activeHypotheticalZero'])}</p:column>
 							</p:row>
 						</c:forEach>
 
@@ -177,8 +186,9 @@
 
 						<c:forEach var="x" items="#{rankingController.activeHypotheticalZero.target}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
-								<p:column>#{x.region.name}</p:column>
-								<p:column styleClass="app-right">#{of:formatNumberDefault(x['activeHypotheticalZero'])}</p:column>
+                                <p:commandLink action="#{bean.select(x.region)}" process="@this" update="@form"
+                                    value="#{x.region.name}" />
+                                <p:column styleClass="app-right">#{of:formatNumberDefault(x['activeHypotheticalZero'])}</p:column>
 							</p:row>
 						</c:forEach>
 					</p:panelGrid>
@@ -192,8 +202,9 @@
 
 						<c:forEach var="x" items="#{rankingController.confirmedHypotheticalFull.source}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
-								<p:column>#{x.region.name}</p:column>
-								<p:column styleClass="app-right">#{of:formatNumberDefault(x['confirmedHypotheticalFull'])}</p:column>
+                                <p:commandLink action="#{bean.select(x.region)}" process="@this" update="@form"
+                                    value="#{x.region.name}" />
+                                <p:column styleClass="app-right">#{of:formatNumberDefault(x['confirmedHypotheticalFull'])}</p:column>
 							</p:row>
 						</c:forEach>
 
@@ -203,8 +214,9 @@
 
 						<c:forEach var="x" items="#{rankingController.confirmedHypotheticalFull.target}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
-								<p:column>#{x.region.name}</p:column>
-								<p:column styleClass="app-right">#{of:formatNumberDefault(x['confirmedHypotheticalFull'])}</p:column>
+                                <p:commandLink action="#{bean.select(x.region)}" process="@this" update="@form"
+                                    value="#{x.region.name}" />
+                                <p:column styleClass="app-right">#{of:formatNumberDefault(x['confirmedHypotheticalFull'])}</p:column>
 							</p:row>
 						</c:forEach>
 					</p:panelGrid>
@@ -331,8 +343,7 @@
 
 										<tr>
 											<c:forEach var="p" items="#{RecordProperty.values()}">
-												<td style="text-align: right">#{of:formatNumber(record[p.name() += 'DeltaPercent'],
-													'+#,##0.00%;-#,##0.00%')}</td>
+												<td style="text-align: right">#{of:formatNumber(record[p.name() += 'DeltaPercent'], '+#,##0.00%;-#,##0.00%')}</td>
 											</c:forEach>
 										</tr>
 
