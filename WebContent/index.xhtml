@@ -56,7 +56,7 @@
 										<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
 											<p:column>
                                                 <p:commandLink action="#{bean.select(x.region)}" process="@this"
-                                                    update="@form" value="#{x.region.name}" />
+                                                    update=":tabs" value="#{x.region.name}" />
                                             </p:column>
                                             <p:column styleClass="app-right">#{of:formatNumber(x[name], format)}</p:column>
 										</p:row>
@@ -70,7 +70,7 @@
 										<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
                                             <p:column>
                                                 <p:commandLink action="#{bean.select(x.region)}" process="@this"
-                                                    update="@form" value="#{x.region.name}" />
+                                                    update=":tabs" value="#{x.region.name}" />
                                             </p:column>
                                             <p:column styleClass="app-right">#{of:formatNumber(x[name], format)}</p:column>
 										</p:row>
@@ -95,7 +95,7 @@
 						<c:forEach var="x" items="#{rankingController.lethality.source}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
                                 <p:column>
-								    <p:commandLink action="#{bean.select(x.region)}" process="@this" update="@form" value="#{x.region.name}" />
+								    <p:commandLink action="#{bean.select(x.region)}" process="@this" update=":tabs" value="#{x.region.name}" />
                                 </p:column>
 								<p:column styleClass="app-right">#{of:formatNumber(x['lethality'], '0.00%')}</p:column>
 							</p:row>
@@ -108,7 +108,7 @@
 						<c:forEach var="x" items="#{rankingController.lethality.target}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
                                 <p:column>
-                                    <p:commandLink action="#{bean.select(x.region)}" process="@this" update="@form"
+                                    <p:commandLink action="#{bean.select(x.region)}" process="@this" update=":tabs"
                                         value="#{x.region.name}" />
                                 </p:column>
                                 <p:column styleClass="app-right">#{of:formatNumber(x['lethality'], '0.00%')}</p:column>
@@ -126,7 +126,7 @@
 						<c:forEach var="x" items="#{rankingController.lethalityLatest.source}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
                                 <p:column>
-                                    <p:commandLink action="#{bean.select(x.region)}" process="@this" update="@form"
+                                    <p:commandLink action="#{bean.select(x.region)}" process="@this" update=":tabs"
                                         value="#{x.region.name}" />
                                 </p:column>
                                 <p:column styleClass="app-right">#{of:formatNumber(x['lethalityLatest'], '0.00%')}</p:column>
@@ -140,7 +140,7 @@
 						<c:forEach var="x" items="#{rankingController.lethalityLatest.target}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
                                 <p:column>
-                                    <p:commandLink action="#{bean.select(x.region)}" process="@this" update="@form"
+                                    <p:commandLink action="#{bean.select(x.region)}" process="@this" update=":tabs"
                                        value="#{x.region.name}" />
                                 </p:column>
                                 <p:column styleClass="app-right">#{of:formatNumber(x['lethalityLatest'], '0.00%')}</p:column>
@@ -158,7 +158,7 @@
 						<c:forEach var="x" items="#{rankingController.growth.source}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
                                 <p:column>
-                                    <p:commandLink action="#{bean.select(x.region)}" process="@this" update="@form"
+                                    <p:commandLink action="#{bean.select(x.region)}" process="@this" update=":tabs"
                                         value="#{x.region.name}" />
                                 </p:column>
                                 <p:column styleClass="app-right">#{of:formatNumber(x['growth'], '0.000')}</p:column>
@@ -172,7 +172,7 @@
 						<c:forEach var="x" items="#{rankingController.growth.target}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
                                 <p:column>
-                                    <p:commandLink action="#{bean.select(x.region)}" process="@this" update="@form"
+                                    <p:commandLink action="#{bean.select(x.region)}" process="@this" update=":tabs"
                                        value="#{x.region.name}" />
                                 </p:column>
                                 <p:column styleClass="app-right">#{of:formatNumber(x['growth'], '0.000')}</p:column>
@@ -190,7 +190,7 @@
 						<c:forEach var="x" items="#{rankingController.activeHypotheticalZero.source}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
                                 <p:column>
-                                    <p:commandLink action="#{bean.select(x.region)}" process="@this" update="@form"
+                                    <p:commandLink action="#{bean.select(x.region)}" process="@this" update=":tabs"
                                         value="#{x.region.name}" />
                                 </p:column>
                                 <p:column styleClass="app-right">#{of:formatNumberDefault(x['activeHypotheticalZero'])}</p:column>
@@ -204,7 +204,7 @@
 						<c:forEach var="x" items="#{rankingController.activeHypotheticalZero.target}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
                                 <p:column>
-                                    <p:commandLink action="#{bean.select(x.region)}" process="@this" update="@form"
+                                    <p:commandLink action="#{bean.select(x.region)}" process="@this" update=":tabs"
                                         value="#{x.region.name}" />
                                 </p:column>
                                 <p:column styleClass="app-right">#{of:formatNumberDefault(x['activeHypotheticalZero'])}</p:column>
@@ -222,7 +222,7 @@
 						<c:forEach var="x" items="#{rankingController.confirmedHypotheticalFull.source}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
                                 <p:column>
-                                    <p:commandLink action="#{bean.select(x.region)}" process="@this" update="@form"
+                                    <p:commandLink action="#{bean.select(x.region)}" process="@this" update=":tabs"
                                         value="#{x.region.name}" />
                                 </p:column>
                                 <p:column styleClass="app-right">#{of:formatNumberDefault(x['confirmedHypotheticalFull'])}</p:column>
@@ -236,7 +236,7 @@
 						<c:forEach var="x" items="#{rankingController.confirmedHypotheticalFull.target}" varStatus="status">
 							<p:row styleClass="ui-datatable-#{status.index % 2 == 0 ? 'even' : 'odd'}">
                                 <p:column>
-                                    <p:commandLink action="#{bean.select(x.region)}" process="@this" update="@form"
+                                    <p:commandLink action="#{bean.select(x.region)}" process="@this" update=":tabs"
                                         value="#{x.region.name}" />
                                 </p:column>
                                 <p:column styleClass="app-right">#{of:formatNumberDefault(x['confirmedHypotheticalFull'])}</p:column>
